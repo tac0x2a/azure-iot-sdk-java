@@ -3,16 +3,15 @@
 
 package com.microsoft.azure.sdk.iot.device;
 
-import com.microsoft.azure.sdk.iot.device.DeviceTwin.DeviceTwin;
-import com.microsoft.azure.sdk.iot.device.DeviceTwin.DeviceTwinCallback;
+import com.microsoft.azure.sdk.iot.device.DeviceTwin.*;
 import com.microsoft.azure.sdk.iot.device.transport.amqps.AmqpsTransport;
 import com.microsoft.azure.sdk.iot.device.transport.https.HttpsTransport;
 import com.microsoft.azure.sdk.iot.device.transport.IotHubReceiveTask;
 import com.microsoft.azure.sdk.iot.device.transport.IotHubSendTask;
 import com.microsoft.azure.sdk.iot.device.transport.IotHubTransport;
 import com.microsoft.azure.sdk.iot.device.transport.mqtt.MqttTransport;
-import java.io.Closeable;
 
+import java.io.Closeable;
 import java.io.IOError;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -20,6 +19,9 @@ import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidParameterException;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  * </p>
  * The client supports HTTPS 1.1 and AMQPS 1.0 transports.
  */
-public class DeviceClient implements Closeable
+public final class DeviceClient implements Closeable
 {
     /** The state of the IoT Hub client's connection with the IoT Hub. */
     protected enum IotHubClientState
@@ -292,27 +294,126 @@ public class DeviceClient implements Closeable
         return this;
     }
 
-    private void createDeviceTwin(DeviceTwinCallback callback,
-                         Object context)
+    /**
+     * Starts the device twin.
+     *
+     * @param deviceTwinStatusCallback the IotHubEventCallback callback for providing the status of Device Twin operations. Cannot be {@code null}.
+     * @param deviceTwinStatusCallbackContext the context to be passed to the status callback. Can be {@code null}.
+     * @param genericPropertyCallBack the PropertyCallBack callback for providing any changes in desired properties. Cannot be {@code null}.
+     * @param genericPropertyCallBackContext the context to be passed to the property callback. Can be {@code null}.     *
+     *
+     * @throws InvalidParameterException if the callback is {@code null}
+     * @throws UnsupportedOperationException if called more than once on the same device
+     * @throws IOException if called when client is not opened
+     */
+
+    public void startDeviceTwin(IotHubEventCallback deviceTwinStatusCallback, Object deviceTwinStatusCallbackContext,
+                            PropertyCallBack genericPropertyCallBack, Object genericPropertyCallBackContext) throws IOException
+    {
+        if (this.state != IotHubClientState.OPEN)
+        {
+            /*
+            **Codes_SRS_DEVICECLIENT_25_013: [**If the client has not been open, the function shall throw an IOException.**]**
+             */
+            throw new IOException("Open the client connection before using it.");
+        }
+        if (deviceTwinStatusCallback == null || genericPropertyCallBack == null)
+        {
+            /*
+            **Codes_SRS_DEVICECLIENT_25_012: [**If the deviceTwinStatusCallback or genericPropertyCallBack is null, the function shall throw an InvalidParameterException.**]**
+             */
+            throw new InvalidParameterException("Callback cannot be null");
+        }
+        if (this.deviceTwin == null)
+        {
+            /*
+            **Codes_SRS_DEVICECLIENT_25_011: [**The function shall create a new instance of class Device Twin and request all twin properties by calling getDeviceTwin**]**
+             */
+            deviceTwin = new DeviceTwin(this, this.config, deviceTwinStatusCallback, deviceTwinStatusCallbackContext,
+                                        genericPropertyCallBack, genericPropertyCallBackContext);
+            deviceTwin.getDeviceTwin();
+        }
+        else
+        {
+            /*
+            **Codes_SRS_DEVICECLIENT_25_014: [**If this method is called twice on the same instance of the client then this method shall throw UnsupportedOperationException.**]**
+             */
+            throw new UnsupportedOperationException("You have already initialised twin");
+        }
+
+
+    }
+
+    /**
+     * Subscribes to desired properties
+     *
+     * @param onDesiredPropertyChange the Map for desired properties and their corresponding callback and context. Can be {@code null}.
+     *
+     * @throws IOException if called when client is not opened or called before starting twin.
+     */
+    public void subscribeToDesiredProperties(Map<Property, Pair<PropertyCallBack<String, Object>, Object>> onDesiredPropertyChange) throws IOException
     {
         if (this.deviceTwin == null)
         {
-            deviceTwin = new DeviceTwin();
+            /*
+            **Codes_SRS_DEVICECLIENT_25_015: [**If the client has not started twin before calling this method, the function shall throw an IOException.**]**
+             */
+            throw new IOException("Start twin before using it");
         }
-        deviceTwin.getDeviceTwin(callback, context);
 
+        if (this.state != IotHubClientState.OPEN)
+        {
+            /*
+            **Codes_SRS_DEVICECLIENT_25_016: [**If the client has not been open, the function shall throw an IOException.**]**
+             */
+            throw new IOException("Open the client connection before using it.");
+        }
+
+        /*
+        **Tests_SRS_DEVICECLIENT_25_017: [**This method shall subscribe to desired properties by calling subscribeDesiredPropertiesNotification on the twin object.**]**
+         */
+        this.deviceTwin.subscribeDesiredPropertiesNotification(onDesiredPropertyChange);
     }
 
-    private void subscribeToDesiredPorperties(DeviceTwinCallback callback,
-                                        Object context)
+    /**
+     * Sends reported properties
+     *
+     * @param reportedProperties the Set for desired properties and their corresponding callback and context. Cannot be {@code null}.
+     *
+     * @throws IOException if called when client is not opened or called before starting twin.
+     * @throws InvalidParameterException if reportedProperties is null or empty.
+     */
+
+    public void sendReportedProperties(Set<Property> reportedProperties) throws IOException
     {
+        if (this.deviceTwin == null)
+        {
+            /*
+            **Codes_SRS_DEVICECLIENT_25_018: [**If the client has not started twin before calling this method, the function shall throw an IOException.**]**
+             */
+            throw new IOException("Start twin before using it");
+        }
 
+        if (this.state != IotHubClientState.OPEN)
+        {
+            /*
+            **Codes_SRS_DEVICECLIENT_25_019: [**If the client has not been open, the function shall throw an IOException.**]**
+             */
+            throw new IOException("Open the client connection before using it.");
+        }
 
-    }
+        if (reportedProperties == null || reportedProperties.isEmpty())
+        {
+            /*
+            **Codes_SRS_DEVICECLIENT_25_020: [**If reportedProperties is null or empty, the function shall throw an InvalidParameterException.**]**
+             */
+            throw new InvalidParameterException("Reported properties set cannot be null or empty.");
+        }
 
-    private void sendReportedProperties(String properties, DeviceTwinCallback callback,
-                                  Object context )
-    {
+        /*
+        **Codes_SRS_DEVICECLIENT_25_021: [**This method shall send to reported properties by calling updateReportedProperties on the twin object.**]**
+         */
+        this.deviceTwin.updateReportedProperties(reportedProperties);
 
     }
 
