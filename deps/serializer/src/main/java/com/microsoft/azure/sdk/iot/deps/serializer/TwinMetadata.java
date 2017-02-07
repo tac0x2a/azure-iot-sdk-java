@@ -32,15 +32,12 @@ public class TwinMetadata {
         lastUpdatedVersion = 0;
     }
 
-<<<<<<< HEAD
     public TwinMetadata(int version)
     {
         update();
         lastUpdatedVersion = version;
     }
 
-=======
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
     public void update(int version)
     {
         update();

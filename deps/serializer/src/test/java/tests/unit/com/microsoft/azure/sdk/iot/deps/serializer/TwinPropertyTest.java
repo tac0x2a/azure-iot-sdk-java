@@ -3,7 +3,6 @@
 
 package tests.unit.com.microsoft.azure.sdk.iot.deps.serializer;
 
-<<<<<<< HEAD
 import com.microsoft.azure.sdk.iot.deps.serializer.TwinMetadata;
 import com.microsoft.azure.sdk.iot.deps.serializer.TwinProperty;
 import org.junit.Test;
@@ -13,15 +12,10 @@ import java.util.HashMap;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
-=======
-import org.junit.Test;
-
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
 /**
  * Unit tests for Twin Property serializer
  */
 public class TwinPropertyTest {
-<<<<<<< HEAD
 
     private static final String bigString_150chars =
             "01234567890123456789012345678901234567890123456789" +
@@ -377,10 +371,4 @@ public class TwinPropertyTest {
     /* Codes_SRS_TWIN_PROPERTY_21_028: [The fromJson shall fill the fields in TwinProperty with the values provided in the json string.] */
     /* Codes_SRS_TWIN_PROPERTY_21_029: [The fromJson shall not change fields that is not reported in the json string.] */
 
-=======
-    @Test
-    public void constructor_succeed()
-    {
-    }
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
 }

@@ -3,7 +3,6 @@
 
 package com.microsoft.azure.sdk.iot.deps.serializer;
 
-<<<<<<< HEAD
 import com.google.gson.*;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -23,44 +22,20 @@ public class TwinProperty {
 
     protected HashMap<String, Object> property;
     protected HashMap<String, TwinMetadata> metadata;
-=======
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.SerializedName;
-
-import java.util.HashMap;
-
-/**
- * Twin represents representation
- */
-public class TwinProperty extends HashMap<String, Object> {
-
-    private static final Gson gson = new GsonBuilder().create();
-
-    @SerializedName("$metadata")
-    protected HashMap<String, TwinMetadata> metadata = null;
-
-    @SerializedName("$version")
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
     protected Integer version;
 
     public TwinProperty()
     {
-<<<<<<< HEAD
         /* Codes_SRS_TWIN_PROPERTY_21_001: [The constructor shall call the constructor for the superClass.] */
         property = new HashMap<>();
         metadata = null;
 
         /* Codes_SRS_TWIN_PROPERTY_21_002: [The constructor shall store set version equals 0.] */
-=======
-        super();
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
         this.version = 0;
     }
 
     public TwinProperty(Boolean reportMetadata)
     {
-<<<<<<< HEAD
         /* Codes_SRS_TWIN_PROPERTY_21_003: [The constructor shall call the constructor for the superClass.] */
         /* Codes_SRS_TWIN_PROPERTY_21_004: [The constructor shall store set version equals 0.] */
         this();
@@ -72,17 +47,10 @@ public class TwinProperty extends HashMap<String, Object> {
         {
             /* Codes_SRS_TWIN_PROPERTY_21_006: [If reportMetadata is false, constructor shall not create a instance of the TwinMetadata keeping it as null.] */
         }
-=======
-        this();
-        if(reportMetadata){
-            this.metadata = new HashMap<>();
-        }
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
     }
 
     public void addProperty(String key, Object value, Integer version) throws IllegalArgumentException
     {
-<<<<<<< HEAD
         if(key == null) {
             /* Codes_SRS_TWIN_PROPERTY_21_013: [If the `key` is null, the addProperty shall throw IllegalArgumentException.] */
             throw new IllegalArgumentException("Property key shall not be null");
@@ -119,17 +87,10 @@ public class TwinProperty extends HashMap<String, Object> {
             /* Codes_SRS_TWIN_PROPERTY_21_010: [The addProperty shall add the created metadata to the `metadata`.] */
             metadata.put(key, new TwinMetadata(version));
         }
-=======
-        if(metadata != null) {
-            metadata.put(key, new TwinMetadata(version));
-        }
-        super.put(key, value);
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
     }
 
     public Integer GetVersion()
     {
-<<<<<<< HEAD
         /* Codes_SRS_TWIN_PROPERTY_21_009: [The GetVersion shall return an Integer with the property version stored in the `version`.] */
         return this.version;
     }
@@ -155,25 +116,12 @@ public class TwinProperty extends HashMap<String, Object> {
             /* Codes_SRS_TWIN_PROPERTY_21_022: [If there is no metadata, the GetMetadata shall return null.] */
             twinMetadata = null;
         }
-=======
-        return this.version;
-    }
-
-    public TwinMetadata GetMetadata(String key)
-    {
-        TwinMetadata twinMetadata = null;
-
-        if(metadata != null){
-            twinMetadata = metadata.get(key);
-        }
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
 
         return twinMetadata;
     }
 
     public HashMap<String, String> GetPropertyMap()
     {
-<<<<<<< HEAD
         HashMap<String, String> propertyMap;
 
         if(property.isEmpty())
@@ -200,18 +148,10 @@ public class TwinProperty extends HashMap<String, Object> {
     public Object get(String key)
     {
         return property.get(key);
-=======
-        HashMap<String , String> propertyMap = new HashMap<>();
-
-        // TODO: cast this to HashMap<String , String>
-
-        return propertyMap;
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
     }
 
     public String toJson()
     {
-<<<<<<< HEAD
         /* Codes_SRS_TWIN_PROPERTY_21_026: [The toJson shall create a String with information in the TwinProperty using json format.] */
         /* Codes_SRS_TWIN_PROPERTY_21_027: [The toJson shall not include null fields.] */
         HashMap<String, Object> map = property;
@@ -222,14 +162,10 @@ public class TwinProperty extends HashMap<String, Object> {
         }
 
         return gson.toJson(map);
-=======
-        return gson.toJson(this);
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
     }
 
     public void fromJson(String json)
     {
-<<<<<<< HEAD
         /* Codes_SRS_TWIN_PROPERTY_21_028: [The fromJson shall fill the fields in TwinProperty with the values provided in the json string.] */
         /* Codes_SRS_TWIN_PROPERTY_21_029: [The fromJson shall not change fields that is not reported in the json string.] */
         Type stringMap = new TypeToken<Map<String, String>>(){}.getType();
@@ -243,26 +179,17 @@ public class TwinProperty extends HashMap<String, Object> {
         for (Map.Entry<String, Object> e : newValues.entrySet()) {
             if(e.getKey().equals("$version"))
             {
-                version = Integer.parseInt(e.getValue().toString());
+//                version = Integer.parseInt(e.getValue().toString());
             }
             else if(e.getKey().equals("$metadata"))
             {
-                metadata.put(e.getKey(), new TwinMetadata());
+//                metadata.put(e.getKey(), new TwinMetadata());
             }
             else
             {
                 property.put(e.getKey(), e.getValue());
             }
         }
-=======
-        TwinProperty newValues = gson.fromJson(json, TwinProperty.class);
-        copy(newValues);
-    }
-
-    private void copy(TwinProperty newValues)
-    {
-
->>>>>>> addf8a754e926e0d488a2aea9316163f84e12f04
     }
 
 }
