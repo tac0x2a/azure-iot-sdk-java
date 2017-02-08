@@ -3,7 +3,8 @@
 
 package com.microsoft.azure.sdk.iot.deps.serializer;
 
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * Twin Properties representation
@@ -13,11 +14,25 @@ import com.google.gson.annotations.SerializedName;
 public class TwinProperties
 {
     /* Codes_SRS_TWIN_PROPERTIES_21_001: [The Desired shall store an instance of the TwinProperty for the Twin `Desired` properties.] */
-    @SerializedName("desired")
     public TwinProperty Desired = new TwinProperty();
 
     /* Codes_SRS_TWIN_PROPERTIES_21_002: [The Reported shall store an instance of the TwinProperty for the Twin `Reported` properties.]*/
-    @SerializedName("reported")
     public TwinProperty Reported = new TwinProperty();
 
+    public String toJson()
+    {
+        return toJsonElement().toString();
+    }
+
+    public JsonElement toJsonElement()
+    {
+        JsonElement desired = Desired.toJsonElement();
+        JsonElement reported = Reported.toJsonElement();
+
+        JsonObject propertiesJson = new JsonObject();
+        propertiesJson.add("desired", desired);
+        propertiesJson.add("reported", reported);
+
+        return (JsonElement) propertiesJson;
+    }
 }

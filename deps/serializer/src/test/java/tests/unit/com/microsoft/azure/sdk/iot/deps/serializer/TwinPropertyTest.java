@@ -3,14 +3,15 @@
 
 package tests.unit.com.microsoft.azure.sdk.iot.deps.serializer;
 
-import com.microsoft.azure.sdk.iot.deps.serializer.TwinMetadata;
 import com.microsoft.azure.sdk.iot.deps.serializer.TwinProperty;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 /**
  * Unit tests for Twin Property serializer
@@ -25,6 +26,31 @@ public class TwinPropertyTest {
     private static final String illegalString_Dot = "illegal.key";
     private static final String illegalString_Space = "illegal key";
     private static final String illegalString_Dollar = "illegal$key";
+
+    private static void assertNotEqual(TwinProperty expected, TwinProperty result)
+    {
+        assertThat(expected.size(), is(result.size()));
+        assertNotContains(expected, result);
+    }
+
+    private static void assertNotContains(TwinProperty expected, TwinProperty result)
+    {
+        assertThat(expected.GetVersion(), is(result.GetVersion()));
+        HashMap<String, String> propertiesMap = expected.GetPropertyMap();
+        for(Map.Entry<String, String> item : propertiesMap.entrySet())
+        {
+            assertThat(expected.get(item.getKey()), is(result.get(item.getKey())));
+            if(expected.GetMetadata(item.getKey()) != null)
+            {
+                if(expected.GetMetadata(item.getKey()).GetLastUpdateVersion() != null) {
+                    assertThat(expected.GetMetadata(item.getKey()).GetLastUpdateVersion(), is(result.GetMetadata(item.getKey()).GetLastUpdateVersion()));
+                }
+                if(expected.GetMetadata(item.getKey()).GetLastUpdate() != null) {
+                    assertThat(expected.GetMetadata(item.getKey()).GetLastUpdate(), is(result.GetMetadata(item.getKey()).GetLastUpdate()));
+                }
+            }
+        }
+    }
 
     /* Tests_SRS_TWIN_PROPERTY_21_001: [The constructor shall call the constructor for the superClass.] */
     /* Tests_SRS_TWIN_PROPERTY_21_002: [The constructor shall store set version equals 0.] */
@@ -75,6 +101,7 @@ public class TwinPropertyTest {
 
     /* Tests_SRS_TWIN_PROPERTY_21_007: [The addProperty shall add the provided pair key value in the superClass' hashMap.] */
     /* Tests_SRS_TWIN_PROPERTY_21_011: [If the metadata is null, the addProperty shall not create or add any metadata to it.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_033: [The size shall return the number of keys in the property map.] */
     @Test
     public void addProperty_noMetadata_succeed()
     {
@@ -296,7 +323,7 @@ public class TwinPropertyTest {
         assertNull(twinProperty.GetMetadata("key2"));
     }
 
-    /* Codes_SRS_TWIN_PROPERTY_21_024: [The GetPropertyMap shall return a hashMap with all keys and values stored on the Twin Property.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_024: [The GetPropertyMap shall return a hashMap with all keys and values stored on the Twin Property.] */
     @Test
     public void getPropertyMap_succeed()
     {
@@ -316,7 +343,7 @@ public class TwinPropertyTest {
         assertThat(propertyMap.get("key3"), is("value3"));
     }
 
-    /* Codes_SRS_TWIN_PROPERTY_21_025: [If there is no key value, the GetPropertyMap shall return a null hashMap.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_025: [If there is no key value, the GetPropertyMap shall return a null hashMap.] */
     @Test
     public void getPropertyMap_empty_failed()
     {
@@ -330,8 +357,8 @@ public class TwinPropertyTest {
         assertNull(propertyMap);
     }
 
-    /* Codes_SRS_TWIN_PROPERTY_21_026: [The toJson shall create a String with information in the TwinProperty using json format.] */
-    /* Codes_SRS_TWIN_PROPERTY_21_027: [The toJson shall not include null fields.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_026: [The toJson shall create a String with information in the TwinProperty using json format.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_027: [The toJson shall not include null fields.] */
     @Test
     public void toJson_noMetadata_succeed()
     {
@@ -348,27 +375,118 @@ public class TwinPropertyTest {
         assertThat(json, is("{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}"));
     }
 
-    /* Codes_SRS_TWIN_PROPERTY_21_026: [The toJson shall create a String with information in the TwinProperty using json format.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_026: [The toJson shall create a String with information in the TwinProperty using json format.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_028: [The fromJson shall fill the fields in TwinProperty with the values provided in the json string.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_030: [If the provided json contains $version, the fromJson shall update the version.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_031: [If the provided json contains $metadata, the fromJson shall update the metadata for each provided key.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_032: [If there is no metadata, and the provided json contains $metadata, the fromJson shall create a metadata instance.] */
     @Test
     public void toJson_withMetadata_succeed()
     {
         // Arrange
+        TwinProperty result = new TwinProperty();
         TwinProperty twinProperty = new TwinProperty(true);
+        twinProperty.addProperty("key1", "value1", 3);
+        twinProperty.addProperty("key2", "value2", 5);
+        twinProperty.addProperty("key3", "value3", 3);
+
+        // Act
+        String json = twinProperty.toJson();
+        result.fromJson(json);
+
+        // Assert
+        assertNotEqual(twinProperty, result);
+    }
+
+    /* Tests_SRS_TWIN_PROPERTY_21_026: [The toJson shall create a String with information in the TwinProperty using json format.] */
+    @Test
+    public void toJson_withIncompletedMetadata_succeed()
+    {
+        // Arrange
+        TwinProperty result = new TwinProperty();
+        TwinProperty twinProperty = new TwinProperty(true);
+        twinProperty.addProperty("key1", "value1", null);
+        twinProperty.addProperty("key2", "value2", 5);
+        twinProperty.addProperty("key3", "value3", 3);
+
+        // Act
+        String json = twinProperty.toJson();
+        result.fromJson(json);
+
+        // Assert
+        assertNotEqual(twinProperty, result);
+    }
+
+    /* Tests_SRS_TWIN_PROPERTY_21_029: [The fromJson shall not change fields that is not reported in the json string.] */
+    @Test
+    public void toJson_withMetadata_complementResult_succeed()
+    {
+        // Arrange
+        TwinProperty result = new TwinProperty();
+        result.addProperty("key1", "oldvalue1", 5);
+        result.addProperty("key5", "value5", 3);
+        TwinProperty twinProperty = new TwinProperty(true);
+        twinProperty.addProperty("key1", "value1", 3);
+        twinProperty.addProperty("key2", "value2", 5);
+        twinProperty.addProperty("key3", "value3", 3);
+
+        // Act
+        String json = twinProperty.toJson();
+        result.fromJson(json);
+
+        // Assert
+        assertNotContains(twinProperty, result);
+    }
+
+    /* Tests_SRS_TWIN_PROPERTY_21_034: [**The get shall return the property value related to the provided key.] */
+    @Test
+    public void get_succeed()
+    {
+        // Arrange
+        TwinProperty twinProperty = new TwinProperty();
         twinProperty.addProperty("key1", "value1", 3);
         twinProperty.addProperty("key2", "value2", 3);
         twinProperty.addProperty("key3", "value3", 3);
 
         // Act
-        String json = twinProperty.toJson();
-
-        TwinProperty result = new TwinProperty();
-        result.fromJson(json);
+        Object result = twinProperty.get("key1");
 
         // Assert
-        assertThat(json, is("{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\",\"$version\":0,\"$metadata\":{\"key1\":{\"$lastUpdated\":\"2017-02-07T04:04:35.0965Z\",\"$lastUpdatedVersion\":3},\"key2\":{\"$lastUpdated\":\"2017-02-07T04:04:35.0965Z\",\"$lastUpdatedVersion\":3},\"key3\":{\"$lastUpdated\":\"2017-02-07T04:04:35.0965Z\",\"$lastUpdatedVersion\":3}}}"));
+        assertThat(result.toString(), is("value1"));
     }
 
-    /* Codes_SRS_TWIN_PROPERTY_21_028: [The fromJson shall fill the fields in TwinProperty with the values provided in the json string.] */
-    /* Codes_SRS_TWIN_PROPERTY_21_029: [The fromJson shall not change fields that is not reported in the json string.] */
+    /* Tests_SRS_TWIN_PROPERTY_21_035: [**If the key does not exists, the get shall return null.] */
+    @Test
+    public void get_failed()
+    {
+        // Arrange
+        TwinProperty twinProperty = new TwinProperty();
+        twinProperty.addProperty("key1", "value1", 3);
+        twinProperty.addProperty("key2", "value2", 3);
+        twinProperty.addProperty("key3", "value3", 3);
+
+        // Act
+        Object result = twinProperty.get("Key4");
+
+        // Assert
+        assertNull(result);
+    }
+
+    /* Tests_SRS_TWIN_PROPERTY_21_035: [**If the key does not exists, the get shall return null.] */
+    @Test
+    public void get_caseSensitive_failed()
+    {
+        // Arrange
+        TwinProperty twinProperty = new TwinProperty();
+        twinProperty.addProperty("key1", "value1", 3);
+        twinProperty.addProperty("key2", "value2", 3);
+        twinProperty.addProperty("key3", "value3", 3);
+
+        // Act
+        Object result = twinProperty.get("Key1");
+
+        // Assert
+        assertNull(result);
+    }
 
 }

@@ -4,11 +4,9 @@
 package com.microsoft.azure.sdk.iot.deps.serializer;
 
 import com.google.gson.*;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.reflect.TypeToken;
 
-import javax.json.Json;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -20,9 +18,9 @@ public class TwinProperty {
 
     private static final Gson gson = new GsonBuilder().create();
 
-    protected HashMap<String, Object> property;
-    protected HashMap<String, TwinMetadata> metadata;
-    protected Integer version;
+    private HashMap<String, Object> property;
+    private HashMap<String, TwinMetadata> metadata;
+    private Integer version;
 
     public TwinProperty()
     {
@@ -49,8 +47,18 @@ public class TwinProperty {
         }
     }
 
-    public void addProperty(String key, Object value, Integer version) throws IllegalArgumentException
+    public void enableMetadata()
     {
+        if(metadata == null)
+        {
+            metadata = new HashMap<>();
+        }
+    }
+
+    public Boolean addProperty(String key, Object value, Integer version) throws IllegalArgumentException
+    {
+        Boolean change = false;
+
         if(key == null) {
             /* Codes_SRS_TWIN_PROPERTY_21_013: [If the `key` is null, the addProperty shall throw IllegalArgumentException.] */
             throw new IllegalArgumentException("Property key shall not be null");
@@ -77,6 +85,12 @@ public class TwinProperty {
             throw new IllegalArgumentException("value is empty");
         }
 
+        Object oldVal = property.get(key);
+        if((oldVal == null) || (oldVal != value))
+        {
+            change = true;
+        }
+
         /* Codes_SRS_TWIN_PROPERTY_21_007: [The addProperty shall add the provided pair key value in the superClass' hashMap.] */
         /* Codes_SRS_TWIN_PROPERTY_21_017: [If the `key` already exists, the addProperty shall replace the existed value by the new one.] */
         property.put(key, value);
@@ -86,7 +100,46 @@ public class TwinProperty {
             /* Codes_SRS_TWIN_PROPERTY_21_008: [The addProperty shall create an instance of the metadata related to the provided key and version.] */
             /* Codes_SRS_TWIN_PROPERTY_21_010: [The addProperty shall add the created metadata to the `metadata`.] */
             metadata.put(key, new TwinMetadata(version));
+            change = true;
         }
+
+        return change;
+    }
+
+    public JsonElement update(HashMap<String, Object> property)
+    {
+        JsonElement updatedJsonElement;
+        TwinProperty updated = new TwinProperty();
+        if(metadata != null)
+        {
+            updated.enableMetadata();
+        }
+
+        if(property != null)
+        {
+
+            for(Map.Entry<String, Object> entry : property.entrySet())
+            {
+                if(addProperty(entry.getKey(), entry.getValue(), null))
+                {
+                    updated.addProperty(entry.getKey(), entry.getValue(), null);
+                }
+            }
+
+            if(updated.size() > 0) {
+                updatedJsonElement = updated.toJsonElement();
+            }
+            else
+            {
+                updatedJsonElement = null;
+            }
+        }
+        else
+        {
+            updatedJsonElement = null;
+        }
+
+        return updatedJsonElement;
     }
 
     public Integer GetVersion()
@@ -142,11 +195,14 @@ public class TwinProperty {
 
     public int size()
     {
+        /* Codes_SRS_TWIN_PROPERTY_21_033: [The size shall return the number of keys in the property map.] */
         return property.size();
     }
 
     public Object get(String key)
     {
+        /* Codes_SRS_TWIN_PROPERTY_21_034: [**The get shall return the property value related to the provided key.] */
+        /* Codes_SRS_TWIN_PROPERTY_21_035: [**If the key does not exists, the get shall return null.] */
         return property.get(key);
     }
 
@@ -154,14 +210,22 @@ public class TwinProperty {
     {
         /* Codes_SRS_TWIN_PROPERTY_21_026: [The toJson shall create a String with information in the TwinProperty using json format.] */
         /* Codes_SRS_TWIN_PROPERTY_21_027: [The toJson shall not include null fields.] */
-        HashMap<String, Object> map = property;
+        return toJsonElement().toString();
+    }
+
+    public JsonElement toJsonElement()
+    {
+        HashMap<String, Object> map = new HashMap<>();
+
+        for(Map.Entry<String, Object> entry : property.entrySet()) {
+            map.put(entry.getKey(), entry.getValue());
+        }
 
         if(metadata != null) {
             map.put("$metadata", metadata);
             map.put("$version", version);
         }
-
-        return gson.toJson(map);
+        return gson.toJsonTree(map);
     }
 
     public void fromJson(String json)
@@ -169,25 +233,43 @@ public class TwinProperty {
         /* Codes_SRS_TWIN_PROPERTY_21_028: [The fromJson shall fill the fields in TwinProperty with the values provided in the json string.] */
         /* Codes_SRS_TWIN_PROPERTY_21_029: [The fromJson shall not change fields that is not reported in the json string.] */
         Type stringMap = new TypeToken<Map<String, String>>(){}.getType();
-        Map<String, Object> map = new HashMap<String, Object>();
-        map = (Map<String, Object>) gson.fromJson(json, map.getClass());
-        copy(map);
-    }
+        Map<String, Object> newValues = new HashMap<String, Object>();
+        newValues = (Map<String, Object>) gson.fromJson(json, newValues.getClass());
 
-    private void copy(Map<String, Object> newValues)
-    {
-        for (Map.Entry<String, Object> e : newValues.entrySet()) {
-            if(e.getKey().equals("$version"))
+        for (Map.Entry<String, Object> entry : newValues.entrySet()) {
+            if(entry.getKey().equals("$version"))
             {
-//                version = Integer.parseInt(e.getValue().toString());
+                /* Codes_SRS_TWIN_PROPERTY_21_030: [If the provided json contains $version, the fromJson shall update the version.] */
+                version = (int)((double)entry.getValue());
             }
-            else if(e.getKey().equals("$metadata"))
+            else if(entry.getKey().equals("$metadata"))
             {
-//                metadata.put(e.getKey(), new TwinMetadata());
+                /* Codes_SRS_TWIN_PROPERTY_21_031: [If the provided json contains $metadata, the fromJson shall update the metadata for each provided key.] */
+                LinkedTreeMap<String, Object> metadataTree = (LinkedTreeMap<String, Object>)entry.getValue();
+                for (LinkedTreeMap.Entry<String, Object> item : metadataTree.entrySet()) {
+                    LinkedTreeMap<String, Object> itemTree = (LinkedTreeMap<String, Object>)item.getValue();
+                    String lastUpdated = null;
+                    Integer lastUpdatedVersion = null;
+                    for (LinkedTreeMap.Entry<String, Object> metadataItem : itemTree.entrySet()) {
+                        if(metadataItem.getKey().equals("$lastUpdated")) {
+                            lastUpdated = metadataItem.getValue().toString();
+                        }
+                        else if (metadataItem.getKey().equals("$lastUpdatedVersion")) {
+                            lastUpdatedVersion = (int)((double)metadataItem.getValue());
+                        }
+                    }
+                    if(lastUpdated != null) {
+                        if(metadata == null) {
+                            /* Codes_SRS_TWIN_PROPERTY_21_032: [If there is no metadata, and the provided json contains $metadata, the fromJson shall create a metadata instance.] */
+                            metadata = new HashMap<>();
+                        }
+                        metadata.put(item.getKey(), new TwinMetadata(lastUpdatedVersion, lastUpdated));
+                    }
+                }
             }
             else
             {
-                property.put(e.getKey(), e.getValue());
+                property.put(entry.getKey(), entry.getValue());
             }
         }
     }

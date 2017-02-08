@@ -32,10 +32,20 @@ public class TwinMetadata {
         lastUpdatedVersion = 0;
     }
 
-    public TwinMetadata(int version)
+    public TwinMetadata(Integer version)
     {
         update();
-        lastUpdatedVersion = version;
+        if(version != null) {
+            lastUpdatedVersion = version;
+        }
+    }
+
+    public TwinMetadata(Integer version, String dateTime)
+    {
+        lastUpdated = dateTime;
+        if(version != null) {
+            lastUpdatedVersion = version;
+        }
     }
 
     public void update(int version)

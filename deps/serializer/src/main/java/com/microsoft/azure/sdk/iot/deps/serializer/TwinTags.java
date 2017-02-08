@@ -5,6 +5,7 @@ package com.microsoft.azure.sdk.iot.deps.serializer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -137,6 +138,11 @@ public class TwinTags extends HashMap<String, HashMap<String, String>> {
     public String toJson()
     {
         return gson.toJson(this);
+    }
+
+    public JsonElement toJsonElement()
+    {
+        return gson.toJsonTree(this);
     }
 
     /* Codes_SRS_TWIN_TAGS_21_047: [The fromJson shall fill the fields in TwinTags with the values provided in the json string.] */

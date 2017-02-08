@@ -5,6 +5,9 @@ package com.microsoft.azure.sdk.iot.deps.serializer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import java.util.HashMap;
 
@@ -15,37 +18,139 @@ public class Twin
 {
 
     private static final Gson gson = new GsonBuilder().create();
-    protected static TwinPropertiesChangeCallback onDesiredCallback = null;
-    protected static TwinPropertiesChangeCallback onReportedCallback = null;
+    private static TwinPropertiesChangeCallback onDesiredCallback = null;
+    private static TwinPropertiesChangeCallback onReportedCallback = null;
 
-    protected TwinTags Tags = null;
-    protected TwinProperties Properties = new TwinProperties();
+    private TwinTags tags = null;
+    private TwinProperties properties = new TwinProperties();
 
     public Twin()
     {
-
+        /* Codes_SRS_TWIN_21_001: [The constructor shall create an instance of the properties.] */
+        /* Codes_SRS_TWIN_21_002: [The constructor shall set OnDesiredCallback as null.] */
+        /* Codes_SRS_TWIN_21_003: [The constructor shall set OnReportedCallback as null.] */
+        /* Codes_SRS_TWIN_21_004: [The constructor shall set Tags as null.] */
     }
 
     public Twin(TwinPropertiesChangeCallback onDesiredCallback)
     {
+        /* Codes_SRS_TWIN_21_005: [The constructor shall call the standard constructor.] */
+        /* Codes_SRS_TWIN_21_007: [The constructor shall set OnReportedCallback as null.] */
+        /* Codes_SRS_TWIN_21_008: [The constructor shall set Tags as null.] */
+        this();
+
+        /* Codes_SRS_TWIN_21_006: [The constructor shall set OnDesiredCallback with the provided Callback function.] */
         setDesiredCallback(onDesiredCallback);
     }
 
     public Twin(TwinPropertiesChangeCallback onDesiredCallback, TwinPropertiesChangeCallback onReportedCallback)
     {
+        /* Codes_SRS_TWIN_21_009: [The constructor shall call the standard constructor.] */
+        /* Codes_SRS_TWIN_21_012: [The constructor shall set Tags as null.] */
+        this();
+
+        /* Codes_SRS_TWIN_21_010: [The constructor shall set OnDesiredCallback with the provided Callback function.] */
+        /* Codes_SRS_TWIN_21_011: [The constructor shall set OnReportedCallback with the provided Callback function.] */
         setDesiredCallback(onDesiredCallback);
         setReportedCallback(onReportedCallback);
     }
 
     public void setDesiredCallback(TwinPropertiesChangeCallback callback)
     {
-        this.onDesiredCallback = callback;
+
+        /* Codes_SRS_TWIN_21_013: [The setDesiredCallback shall set OnDesiredCallback with the provided Callback function.] */
+        onDesiredCallback = callback;
     }
 
     public void setReportedCallback(TwinPropertiesChangeCallback callback)
     {
-        this.onReportedCallback = callback;
+        /* Codes_SRS_TWIN_21_014: [The setReportedCallback shall set OnReportedCallback with the provided Callback function.] */
+        onReportedCallback = callback;
     }
+
+    public void enableTags()
+    {
+        /* Codes_SRS_TWIN_21_019: [The enableTags shall create an instance of the Tags class.] */
+        tags = new TwinTags();
+    }
+
+    public void enableMetadata()
+    {
+        /* Codes_SRS_TWIN_21_020: [The enableMetadata shall create an instance of the Metadata fro the Desired and for the Reported Properties.] */
+        properties.Desired.enableMetadata();
+        properties.Reported.enableMetadata();
+    }
+
+    public String toJson()
+    {
+        /* Codes_SRS_TWIN_21_015: [The toJson shall create a String with information in the Twin using json format.] */
+        /* Codes_SRS_TWIN_21_016: [The toJson shall not include null fields.] */
+        return toJsonElement().toString();
+    }
+
+    public JsonElement toJsonElement()
+    {
+        /* Codes_SRS_TWIN_21_017: [The toJsonElement shall return a JsonElement with information in the Twin using json format.] */
+        JsonObject twinJson = new JsonObject();
+
+        /* Codes_SRS_TWIN_21_018: [The toJson shall not include null fields.] */
+        if(tags != null) {
+            twinJson.add("tags", tags.toJsonElement());
+        }
+
+        twinJson.add("properties", properties.toJsonElement());
+
+        return (JsonElement) twinJson;
+    }
+
+    public String updateDesiredProperty(HashMap<String, Object> property)
+    {
+        String json;
+        /* Codes_SRS_TWIN_21_021: [The updateDesiredProperty shall add all provided properties to the Desired property.] */
+        JsonElement updatedElements = properties.Desired.update(property);
+
+        if(updatedElements == null)
+        {
+            /* Codes_SRS_TWIN_21_023: [If the provided `property` map is null, the updateDesiredProperty shall return null.] */
+            /* Codes_SRS_TWIN_21_024: [If no Desired property changed its value, the updateDesiredProperty shall return null.] */
+            json = null;
+        }
+        else
+        {
+            /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the new desired properties with changes.] */
+            JsonObject twinJson = new JsonObject();
+            twinJson.add("desired", updatedElements);
+
+            json = twinJson.toString();
+        }
+
+        return json;
+    }
+
+    public String updateReportedProperty(HashMap<String, Object> property)
+    {
+        String json;
+        /* Codes_SRS_TWIN_21_025: [The updateReportedProperty shall add all provided properties to the Reported property.] */
+        JsonElement updatedElements = properties.Reported.update(property);
+
+        if(updatedElements == null)
+        {
+            /* Codes_SRS_TWIN_21_027: [If the provided `property` map is null, the updateReportedProperty shall return null.] */
+            /* Codes_SRS_TWIN_21_028: [If no Reported property changed its value, the updateReportedProperty shall return null.] */
+            json = null;
+        }
+        else
+        {
+            /* Codes_SRS_TWIN_21_026: [The updateReportedProperty shall return a string with json representing the new Reported properties with changes.] */
+            JsonObject twinJson = new JsonObject();
+            twinJson.add("reported", updatedElements);
+
+            json = twinJson.toString();
+        }
+
+        return json;
+    }
+
 
     public void updateTwin(String json)
     {
@@ -56,45 +161,25 @@ public class Twin
     public void updateDesiredProperty(String json)
     {
         Twin newValues = new Twin();
-        newValues.Properties.Desired.fromJson(json);
+        newValues.properties.Desired.fromJson(json);
         copyAndReport(newValues);
     }
 
     public void updateReportedProperty(String json)
     {
         Twin newValues = new Twin();
-        newValues.Properties.Reported.fromJson(json);
+        newValues.properties.Reported.fromJson(json);
         copyAndReport(newValues);
     }
 
-    public String updateDesiredProperty(HashMap<String, String> property)
+    public Integer getDesiredPropertyVersion()
     {
-        TwinProperty updatedDesiredProperty = new TwinProperty();
-
-        // TODO: change the desired property in Properties.Desired.
-        // TODO: populate the updateReportedProperty with the properties new values.
-
-        return updatedDesiredProperty.toJson();
+        return properties.Desired.GetVersion();
     }
 
-    public String updateReportedProperty(HashMap<String, String> property)
+    public Integer getReportedPropertyVersion()
     {
-        TwinProperty updatedReportedProperty = new TwinProperty();
-
-        // TODO: change the reported property in Properties.Reported.
-        // TODO: populate the updateReportedProperty with the properties new values.
-
-        return updatedReportedProperty.toJson();
-    }
-
-    public Integer GetDesiredPropertyVersion()
-    {
-        return Properties.Desired.GetVersion();
-    }
-
-    public Integer GetReportedPropertyVersion()
-    {
-        return Properties.Reported.GetVersion();
+        return properties.Reported.GetVersion();
     }
 
     private void copyAndReport(Twin newValues)

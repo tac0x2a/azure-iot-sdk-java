@@ -19,6 +19,9 @@ public class TwinProperty extends HashMap<String, Object> {
     public TwinProperty(Boolean reportMetadata);
     public void addProperty(String key, Object value, Integer version) throws IllegalArgumentException;
 
+    public int size();
+    public Object get(String key);
+
     public Integer GetVersion();
     public HashMap<String, TwinMetadata> GetMetadata();
     public TwinMetadata GetMetadata(String key);
@@ -124,3 +127,25 @@ public class TwinProperty extends HashMap<String, Object> {
 
 **SRS_TWIN_PROPERTY_21_028: [**The fromJson shall fill the fields in TwinProperty with the values provided in the json string.**]**  
 **SRS_TWIN_PROPERTY_21_029: [**The fromJson shall not change fields that is not reported in the json string.**]**  
+**SRS_TWIN_PROPERTY_21_030: [**If the provided json contains $Version, the fromJson shall update the version.**]**  
+**SRS_TWIN_PROPERTY_21_031: [**If the provided json contains $Metadata, the fromJson shall update the metadata for each provided key.**]**  
+**SRS_TWIN_PROPERTY_21_032: [**If there is no metadata, and the provided json contains $Metadata, the fromJson shall create a metadata instance.**]**  
+
+
+### size
+
+```java
+    public int size();
+```
+
+**SRS_TWIN_PROPERTY_21_033: [**The size shall return the number of keys in the property map.**]**  
+
+
+### get
+
+```java
+    public Object get(String key);
+```
+
+**SRS_TWIN_PROPERTY_21_034: [**The get shall return the property value related to the provided key.**]**  
+**SRS_TWIN_PROPERTY_21_035: [**If the key does not exists, the get shall return null.**]**  
