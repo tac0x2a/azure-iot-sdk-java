@@ -22,7 +22,7 @@ public class Twin
     private static TwinPropertiesChangeCallback onReportedCallback = null;
 
     private TwinTags tags = null;
-    private TwinProperties properties = new TwinProperties();
+    protected TwinProperties properties = new TwinProperties();
 
     public Twin()
     {
@@ -118,10 +118,7 @@ public class Twin
         else
         {
             /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the new desired properties with changes.] */
-            JsonObject twinJson = new JsonObject();
-            twinJson.add("desired", updatedElements);
-
-            json = twinJson.toString();
+            json = updatedElements.toString();
         }
 
         return json;
@@ -142,10 +139,7 @@ public class Twin
         else
         {
             /* Codes_SRS_TWIN_21_026: [The updateReportedProperty shall return a string with json representing the new Reported properties with changes.] */
-            JsonObject twinJson = new JsonObject();
-            twinJson.add("reported", updatedElements);
-
-            json = twinJson.toString();
+            json = updatedElements.toString();
         }
 
         return json;
@@ -154,22 +148,20 @@ public class Twin
 
     public void updateTwin(String json)
     {
-        Twin newValues = gson.fromJson(json, Twin.class);
-        copyAndReport(newValues);
     }
 
     public void updateDesiredProperty(String json)
     {
-        Twin newValues = new Twin();
-        newValues.properties.Desired.fromJson(json);
-        copyAndReport(newValues);
+        /* Codes_SRS_TWIN_21_029: [The updateDesiredProperty shall update the Desired property using the information provided in the json.] */
+        /* Codes_SRS_TWIN_21_030: [The updateDesiredProperty shall generate a map with all pairs key value that had its content changed.] */
+        reportedDesiredChanged(properties.Desired.fromJson(json));
     }
 
     public void updateReportedProperty(String json)
     {
-        Twin newValues = new Twin();
-        newValues.properties.Reported.fromJson(json);
-        copyAndReport(newValues);
+        /* Codes_SRS_TWIN_21_034: [The updateReportedProperty shall update the Reported property using the information provided in the json.] */
+        /* Codes_SRS_TWIN_21_035: [The updateReportedProperty shall generate a map with all pairs key value that had its content changed.] */
+        reportedReportedChanged(properties.Reported.fromJson(json));
     }
 
     public Integer getDesiredPropertyVersion()
@@ -182,23 +174,33 @@ public class Twin
         return properties.Reported.GetVersion();
     }
 
-    private void copyAndReport(Twin newValues)
-    {
-        // TODO: Copy the new properties values to this instance.
-        // TODO: fire callback if any changes in the properties.
+    public HashMap<String, String> getDesiredPropertyMap() {
+        return properties.Desired.GetPropertyMap();
     }
 
-    protected static void reporteDesiredChanged(TwinProperty property)
+    public HashMap<String, String> getReportedPropertyMap() {
+        return properties.Reported.GetPropertyMap();
+    }
+
+    protected static void reportedDesiredChanged(HashMap<String, String> diff)
     {
-        if(onDesiredCallback != null){
-            onDesiredCallback.execute(property.GetPropertyMap());
+        /* Codes_SRS_TWIN_21_032: [If the OnDesiredCallback is set as null, the updateDesiredProperty shall discard the map with the changed pairs.] */
+        /* Codes_SRS_TWIN_21_033: [If there is no change in the Desired property, the updateDesiredProperty shall not call the OnDesiredCallback.] */
+        if((diff != null) &&(onDesiredCallback != null))
+        {
+            /* Codes_SRS_TWIN_21_031: [The updateDesiredProperty shall send the map with all changed pairs to the upper layer calling onDesiredCallback (TwinPropertiesChangeCallback).] */
+            onDesiredCallback.execute(diff);
         }
     }
 
-    protected static void reporteReportedChanged(TwinProperty property)
+    protected static void reportedReportedChanged(HashMap<String, String> diff)
     {
-        if(onReportedCallback != null){
-            onReportedCallback.execute(property.GetPropertyMap());
+        /* Codes_SRS_TWIN_21_037: [If the OnReportedCallback is set as null, the updateReportedProperty shall discard the map with the changed pairs.] */
+        /* Codes_SRS_TWIN_21_038: [If there is no change in the Reported property, the updateReportedProperty shall not call the OnReportedCallback.] */
+        if((diff != null) &&(onReportedCallback != null))
+        {
+            /* Codes_SRS_TWIN_21_036: [The updateReportedProperty shall send the map with all changed pairs to the upper layer calling onReportedCallback (TwinPropertiesChangeCallback).] */
+            onReportedCallback.execute(diff);
         }
     }
 }

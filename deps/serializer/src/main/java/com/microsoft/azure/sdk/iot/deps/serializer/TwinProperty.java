@@ -17,6 +17,10 @@ import java.util.*;
 public class TwinProperty {
 
     private static final Gson gson = new GsonBuilder().create();
+    private static final String versionTag = "$version";
+    private static final String metadataTag = "$metadata";
+    private static final String lastUpdateTag = "$lastUpdated";
+    private static final String lastUpdateVersionTag = "$lastUpdatedVersion";
 
     private HashMap<String, Object> property;
     private HashMap<String, TwinMetadata> metadata;
@@ -86,7 +90,7 @@ public class TwinProperty {
         }
 
         Object oldVal = property.get(key);
-        if((oldVal == null) || (oldVal != value))
+        if((oldVal == null) || (!oldVal.equals(value)))
         {
             change = true;
         }
@@ -222,14 +226,16 @@ public class TwinProperty {
         }
 
         if(metadata != null) {
-            map.put("$metadata", metadata);
-            map.put("$version", version);
+            map.put(metadataTag, metadata);
+            map.put(versionTag, version);
         }
         return gson.toJsonTree(map);
     }
 
-    public void fromJson(String json)
+    public HashMap<String, String> fromJson(String json)
     {
+        HashMap<String, String> diff = null;
+
         /* Codes_SRS_TWIN_PROPERTY_21_028: [The fromJson shall fill the fields in TwinProperty with the values provided in the json string.] */
         /* Codes_SRS_TWIN_PROPERTY_21_029: [The fromJson shall not change fields that is not reported in the json string.] */
         Type stringMap = new TypeToken<Map<String, String>>(){}.getType();
@@ -237,12 +243,12 @@ public class TwinProperty {
         newValues = (Map<String, Object>) gson.fromJson(json, newValues.getClass());
 
         for (Map.Entry<String, Object> entry : newValues.entrySet()) {
-            if(entry.getKey().equals("$version"))
+            if(entry.getKey().equals(versionTag))
             {
                 /* Codes_SRS_TWIN_PROPERTY_21_030: [If the provided json contains $version, the fromJson shall update the version.] */
                 version = (int)((double)entry.getValue());
             }
-            else if(entry.getKey().equals("$metadata"))
+            else if(entry.getKey().equals(metadataTag))
             {
                 /* Codes_SRS_TWIN_PROPERTY_21_031: [If the provided json contains $metadata, the fromJson shall update the metadata for each provided key.] */
                 LinkedTreeMap<String, Object> metadataTree = (LinkedTreeMap<String, Object>)entry.getValue();
@@ -251,10 +257,10 @@ public class TwinProperty {
                     String lastUpdated = null;
                     Integer lastUpdatedVersion = null;
                     for (LinkedTreeMap.Entry<String, Object> metadataItem : itemTree.entrySet()) {
-                        if(metadataItem.getKey().equals("$lastUpdated")) {
+                        if(metadataItem.getKey().equals(lastUpdateTag)) {
                             lastUpdated = metadataItem.getValue().toString();
                         }
-                        else if (metadataItem.getKey().equals("$lastUpdatedVersion")) {
+                        else if (metadataItem.getKey().equals(lastUpdateVersionTag)) {
                             lastUpdatedVersion = (int)((double)metadataItem.getValue());
                         }
                     }
@@ -269,9 +275,20 @@ public class TwinProperty {
             }
             else
             {
+                Object oldVal = property.get(entry.getKey());
+                if((oldVal == null) || (!oldVal.equals(entry.getValue())))
+                {
+                    if(diff == null)
+                    {
+                        diff = new HashMap<>();
+                    }
+                    diff.put(entry.getKey(), entry.getValue().toString());
+                }
                 property.put(entry.getKey(), entry.getValue());
             }
         }
+
+        return diff;
     }
 
 }

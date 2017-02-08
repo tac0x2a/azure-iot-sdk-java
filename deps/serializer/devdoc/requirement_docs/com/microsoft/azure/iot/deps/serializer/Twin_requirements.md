@@ -152,6 +152,32 @@ public class Twin extends IoTHubDeviceProperties
 **SRS_TWIN_21_028: [**If no Reported property changed its value, the updateReportedProperty shall return null.**]**  
 
 
+### updateDesiredProperty
+
+```java
+    public void updateDesiredProperty(String json)
+```
+
+**SRS_TWIN_21_029: [**The updateDesiredProperty shall update the Desired property using the information provided in the json.**]**  
+**SRS_TWIN_21_030: [**The updateDesiredProperty shall generate a map with all pairs key value that had its content changed.**]**  
+**SRS_TWIN_21_031: [**The updateDesiredProperty shall send the map with all changed pairs to the upper layer calling onDesiredCallback (TwinPropertiesChangeCallback).**]**  
+**SRS_TWIN_21_032: [**If the OnDesiredCallback is set as null, the updateDesiredProperty shall discard the map with the changed pairs.**]**  
+**SRS_TWIN_21_033: [**If there is no change in the Desired property, the updateDesiredProperty shall not call the OnDesiredCallback.**]**  
+
+
+### updateReportedProperty
+
+```java
+    public void updateReportedProperty(String json)
+```
+
+**SRS_TWIN_21_034: [**The updateReportedProperty shall update the Reported property using the information provided in the json.**]**  
+**SRS_TWIN_21_035: [**The updateReportedProperty shall generate a map with all pairs key value that had its content changed.**]**  
+**SRS_TWIN_21_036: [**The updateReportedProperty shall send the map with all changed pairs to the upper layer calling onReportedCallback (TwinPropertiesChangeCallback).**]**  
+**SRS_TWIN_21_037: [**If the OnReportedCallback is set as null, the updateReportedProperty shall discard the map with the changed pairs.**]**  
+**SRS_TWIN_21_038: [**If there is no change in the Reported property, the updateReportedProperty shall not call the OnReportedCallback.**]**  
+
+
 ### updateTwin
 
 ```java
@@ -169,23 +195,12 @@ public class Twin extends IoTHubDeviceProperties
 **SRS_TWIN_21_023: [**If OnReportedCallback was not provided, the updateTwin shall not do anything with the list of updated reported properties.**]**  
 
 
-### updateDesiredProperty
-
-```java
-    public void updateDesiredProperty(String json)
-```
-
-### updateReportedProperty
-
-```java
-    public void updateReportedProperty(String json)
-```
-
 ### GetDesiredPropertyVersion
 
 ```java
     public Integer getDesiredPropertyVersion()
 ```
+
 
 ### GetReportedPropertyVersion
 
@@ -193,3 +208,16 @@ public class Twin extends IoTHubDeviceProperties
     public Integer getReportedPropertyVersion()
 ```
 
+
+### getDesiredPropertyMap
+
+```java
+    public HashMap<String, String> getDesiredPropertyMap()
+```
+
+
+### getReportedPropertyMap
+
+```java
+    public HashMap<String, String> getReportedPropertyMap() {
+```
