@@ -17,7 +17,6 @@ import java.util.TimeZone;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -33,7 +32,7 @@ public class TwinTest {
 
     protected static class OnDesiredCallback implements TwinPropertiesChangeCallback
     {
-        public HashMap<String, String> diff = null;
+        private HashMap<String, String> diff = null;
         public void execute(HashMap<String , String> propertyMap)
         {
             diff = propertyMap;
@@ -42,7 +41,7 @@ public class TwinTest {
 
     protected static class OnReportedCallback implements TwinPropertiesChangeCallback
     {
-        protected HashMap<String, String> diff = null;
+        private HashMap<String, String> diff = null;
         public void execute(HashMap<String , String> propertyMap)
         {
             diff = propertyMap;
@@ -79,45 +78,6 @@ public class TwinTest {
         // Arrange
         // Act
         Twin twin = new Twin();
-
-        // Assert
-        assertNotNull(twin);
-    }
-
-    /* Codes_SRS_TWIN_21_005: [The constructor shall call the standard constructor.] */
-    /* Codes_SRS_TWIN_21_007: [The constructor shall set OnReportedCallback as null.] */
-    /* Codes_SRS_TWIN_21_008: [The constructor shall set Tags as null.] */
-    /* Codes_SRS_TWIN_21_006: [The constructor shall set OnDesiredCallback with the provided Callback function.] */
-    @Test
-    public void constructor_OnDesiredCallback_succeed()
-    {
-        // Arrange
-        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
-
-        // Act
-        Twin twin = new Twin(onDesiredCallback);
-
-        // TODO: Include callback test
-
-        // Assert
-        assertNotNull(twin);
-    }
-
-    /* Codes_SRS_TWIN_21_009: [The constructor shall call the standard constructor.] */
-    /* Codes_SRS_TWIN_21_012: [The constructor shall set Tags as null.] */
-    /* Codes_SRS_TWIN_21_010: [The constructor shall set OnDesiredCallback with the provided Callback function.] */
-    /* Codes_SRS_TWIN_21_011: [The constructor shall set OnReportedCallback with the provided Callback function.] */
-    @Test
-    public void constructor_OnDesiredAndReportedCallback_succeed()
-    {
-        // Arrange
-        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
-        OnReportedCallback onReportedCallback = new OnReportedCallback();
-
-        // Act
-        Twin twin = new Twin(onDesiredCallback, onReportedCallback);
-
-        // TODO: Include callback test
 
         // Assert
         assertNotNull(twin);
@@ -201,7 +161,7 @@ public class TwinTest {
     }
 
     /* Codes_SRS_TWIN_21_020: [The enableMetadata shall create an instance of the Metadata fro the Desired and for the Reported Properties.] */
-/*    @Test
+    @Test
     public void toJson_emptyClass_withMetadata_succeed()
     {
         // Arrange
@@ -214,7 +174,7 @@ public class TwinTest {
         String json = twin.toJson();
         assertThat(json, is("{\"properties\":{\"desired\":{\"$version\":0,\"$metadata\":{}},\"reported\":{\"$version\":0,\"$metadata\":{}}}}"));
     }
-*/
+
     /* Codes_SRS_TWIN_21_021: [The updateDesiredProperty shall add all provided properties to the Desired property.] */
     @Test
     public void updateDesiredProperty_succeed()
@@ -263,7 +223,7 @@ public class TwinTest {
 
         // Assert
         TwinProperty resultJson = new TwinProperty();
-        resultJson.fromJson(json);
+        resultJson.update(json, null);
         assertThat(resultJson.size(), is(3));
         assertThat(resultJson.get("key1").toString(), is("value1"));
         assertThat((Double)resultJson.get("key2"), is(1234.0));
@@ -306,7 +266,7 @@ public class TwinTest {
 
         // Assert
         TwinProperty resultJson = new TwinProperty();
-        resultJson.fromJson(json);
+        resultJson.update(json, null);
         assertThat(resultJson.size(), is(3));
         assertThat(resultJson.get("key1").toString(), is("value1"));
         assertThat((Double)resultJson.get("key2"), is(1234.0));
@@ -726,6 +686,10 @@ public class TwinTest {
         assertThat(result.get("key3"), is("value3"));
     }
 
+    /* Codes_SRS_TWIN_21_005: [The constructor shall call the standard constructor.] */
+    /* Codes_SRS_TWIN_21_007: [The constructor shall set OnReportedCallback as null.] */
+    /* Codes_SRS_TWIN_21_008: [The constructor shall set Tags as null.] */
+    /* Codes_SRS_TWIN_21_006: [The constructor shall set OnDesiredCallback with the provided Callback function.] */
     /* Codes_SRS_TWIN_21_029: [The updateDesiredProperty shall update the Desired property using the information provided in the json.] */
     /* Codes_SRS_TWIN_21_030: [The updateDesiredProperty shall generate a map with all pairs key value that had its content changed.] */
     /* Codes_SRS_TWIN_21_031: [The updateDesiredProperty shall send the map with all changed pairs to the upper layer calling onDesiredCallback (TwinPropertiesChangeCallback).] */
@@ -734,7 +698,7 @@ public class TwinTest {
     {
         // Arrange
         OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
-        Twin twin = new Twin();
+        Twin twin = new Twin(onDesiredCallback);
         twin.setDesiredCallback(onDesiredCallback);
 
         String json = "{\"key1\":\"value1\",\"key2\":1234,\"key3\":\"value3\"}";
@@ -851,15 +815,19 @@ public class TwinTest {
         assertThat(result.get("key3"), is("value3"));
     }
 
-/*    @Test
+    /* Codes_SRS_TWIN_21_009: [The constructor shall call the standard constructor.] */
+    /* Codes_SRS_TWIN_21_012: [The constructor shall set Tags as null.] */
+    /* Codes_SRS_TWIN_21_010: [The constructor shall set OnDesiredCallback with the provided Callback function.] */
+    /* Codes_SRS_TWIN_21_011: [The constructor shall set OnReportedCallback with the provided Callback function.] */
+    @Test
     public void updateTwin_json_emptyClass_succeed()
     {
         // Arrange
         OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
-        Twin twin = new Twin();
-        twin.setDesiredCallback(onDesiredCallback);
+        OnReportedCallback onReportedCallback = new OnReportedCallback();
+        Twin twin = new Twin(onDesiredCallback, onReportedCallback);
 
-        String json = "{\"properties\":{\"desired\":{\"key1\":\"value1\",\"key2\":1234,\"key3\":\"value3\"}},\"reported\":{}}";
+        String json = "{\"properties\":{\"desired\":{\"key1\":\"value1\",\"key2\":1234,\"key3\":\"value3\"},\"reported\":{\"key1\":\"value1\",\"key2\":1234.124,\"key5\":\"value5\",\"key7\":true}}}";
 
         // Act
         twin.updateTwin(json);
@@ -871,12 +839,27 @@ public class TwinTest {
         assertThat(keydb, is(1234.0));
         assertThat(onDesiredCallback.diff.get("key3"), is("value3"));
 
+        assertThat(onReportedCallback.diff.size(), is(4));
+        assertThat(onReportedCallback.diff.get("key1"), is("value1"));
+        keydb = Double.parseDouble(onReportedCallback.diff.get("key2"));
+        assertThat(keydb, is(1234.124));
+        assertThat(onReportedCallback.diff.get("key5"), is("value5"));
+        assertThat(onReportedCallback.diff.get("key7"), is("true"));
+
         HashMap<String, String> result = twin.getDesiredPropertyMap();
         assertThat(result.size(), is(3));
         assertThat(result.get("key1"), is("value1"));
         keydb = Double.parseDouble(result.get("key2"));
         assertThat(keydb, is(1234.0));
         assertThat(result.get("key3"), is("value3"));
+
+        result = twin.getReportedPropertyMap();
+        assertThat(result.size(), is(4));
+        assertThat(result.get("key1"), is("value1"));
+        keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.124));
+        assertThat(result.get("key5"), is("value5"));
+        assertThat(result.get("key7"), is("true"));
     }
-    */
+
 }

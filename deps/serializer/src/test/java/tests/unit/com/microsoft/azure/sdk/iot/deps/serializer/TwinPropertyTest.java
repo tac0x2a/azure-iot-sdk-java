@@ -392,7 +392,7 @@ public class TwinPropertyTest {
 
         // Act
         String json = twinProperty.toJson();
-        result.fromJson(json);
+        result.update(json, null);
 
         // Assert
         assertNotEqual(twinProperty, result);
@@ -411,7 +411,7 @@ public class TwinPropertyTest {
 
         // Act
         String json = twinProperty.toJson();
-        result.fromJson(json);
+        result.update(json, null);
 
         // Assert
         assertNotEqual(twinProperty, result);
@@ -432,7 +432,7 @@ public class TwinPropertyTest {
 
         // Act
         String json = twinProperty.toJson();
-        result.fromJson(json);
+        result.update(json, null);
 
         // Assert
         assertNotContains(twinProperty, result);

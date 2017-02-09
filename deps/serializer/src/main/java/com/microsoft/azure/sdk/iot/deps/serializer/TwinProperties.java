@@ -24,13 +24,13 @@ public class TwinProperties
     public TwinProperty Reported = new TwinProperty();
 
     public void enableDesiredMetadata() { Desired.enableMetadata(); }
-    public void enableReportedMetadata() { Desired.enableMetadata(); }
+    public void enableReportedMetadata() { Reported.enableMetadata(); }
 
     public JsonElement updateDesired(HashMap<String, Object> property) { return Desired.update(property); }
     public JsonElement updateReported(HashMap<String, Object> property) { return Reported.update(property); }
 
-    public HashMap<String, String> fromJsonDesired(String json) { return Desired.fromJson(json); }
-    public HashMap<String, String> fromJsonReported(String json) { return Reported.fromJson(json); }
+    public void updateDesired(String json, TwinPropertiesChangeCallback onDesiredCallback) { Desired.update(json, onDesiredCallback); }
+    public void updateReported(String json, TwinPropertiesChangeCallback onDesiredCallback) { Reported.update(json, onDesiredCallback); }
 
     public Integer getDesiredVersion() { return Desired.GetVersion(); }
     public Integer getReportedVersion() { return Reported.GetVersion(); }
@@ -55,17 +55,17 @@ public class TwinProperties
         return (JsonElement) propertiesJson;
     }
 
-    public void fromJson(LinkedTreeMap<String, Object> jsonTree)
+    public void update(LinkedTreeMap<String, Object> jsonTree, TwinPropertiesChangeCallback onDesiredCallback, TwinPropertiesChangeCallback onReportedCallback)
     {
         for(Map.Entry<String, Object> entry : jsonTree.entrySet())
         {
             if(entry.getKey().equals("desired"))
             {
-                Desired.fromJson((LinkedTreeMap<String, Object>) entry.getValue());
+                Desired.update((LinkedTreeMap<String, Object>) entry.getValue(), onDesiredCallback);
             }
             else if(entry.getKey().equals("reported"))
             {
-                Reported.fromJson((LinkedTreeMap<String, Object>) entry.getValue());
+                Reported.update((LinkedTreeMap<String, Object>) entry.getValue(), onReportedCallback);
             }
         }
 
