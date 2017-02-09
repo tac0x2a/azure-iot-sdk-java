@@ -232,6 +232,58 @@ public class TwinProperty {
         return gson.toJsonTree(map);
     }
 
+    public HashMap<String, String> fromJson(LinkedTreeMap<String, Object> jsonTree)
+    {
+        HashMap<String, String> diff = null;
+        for (Map.Entry<String, Object> entry : jsonTree.entrySet()) {
+            if(entry.getKey().equals(versionTag))
+            {
+                /* Codes_SRS_TWIN_PROPERTY_21_030: [If the provided json contains $version, the fromJson shall update the version.] */
+                version = (int)((double)entry.getValue());
+            }
+            else if(entry.getKey().equals(metadataTag))
+            {
+                /* Codes_SRS_TWIN_PROPERTY_21_031: [If the provided json contains $metadata, the fromJson shall update the metadata for each provided key.] */
+                LinkedTreeMap<String, Object> metadataTree = (LinkedTreeMap<String, Object>)entry.getValue();
+                for (LinkedTreeMap.Entry<String, Object> item : metadataTree.entrySet()) {
+                    LinkedTreeMap<String, Object> itemTree = (LinkedTreeMap<String, Object>)item.getValue();
+                    String lastUpdated = null;
+                    Integer lastUpdatedVersion = null;
+                    for (LinkedTreeMap.Entry<String, Object> metadataItem : itemTree.entrySet()) {
+                        if(metadataItem.getKey().equals(lastUpdateTag)) {
+                            lastUpdated = metadataItem.getValue().toString();
+                        }
+                        else if (metadataItem.getKey().equals(lastUpdateVersionTag)) {
+                            lastUpdatedVersion = (int)((double)metadataItem.getValue());
+                        }
+                    }
+                    if(lastUpdated != null) {
+                        if(metadata == null) {
+                            /* Codes_SRS_TWIN_PROPERTY_21_032: [If there is no metadata, and the provided json contains $metadata, the fromJson shall create a metadata instance.] */
+                            metadata = new HashMap<>();
+                        }
+                        metadata.put(item.getKey(), new TwinMetadata(lastUpdatedVersion, lastUpdated));
+                    }
+                }
+            }
+            else
+            {
+                Object oldVal = property.get(entry.getKey());
+                if((oldVal == null) || (!oldVal.equals(entry.getValue())))
+                {
+                    if(diff == null)
+                    {
+                        diff = new HashMap<>();
+                    }
+                    diff.put(entry.getKey(), entry.getValue().toString());
+                }
+                property.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return diff;
+    }
+
     public HashMap<String, String> fromJson(String json)
     {
         HashMap<String, String> diff = null;

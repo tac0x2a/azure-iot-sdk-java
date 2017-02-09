@@ -7,9 +7,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import com.google.gson.internal.LinkedTreeMap;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Twin Representation
@@ -77,8 +78,8 @@ public class Twin
     public void enableMetadata()
     {
         /* Codes_SRS_TWIN_21_020: [The enableMetadata shall create an instance of the Metadata fro the Desired and for the Reported Properties.] */
-        properties.Desired.enableMetadata();
-        properties.Reported.enableMetadata();
+        properties.enableDesiredMetadata();
+        properties.enableReportedMetadata();
     }
 
     public String toJson()
@@ -107,7 +108,7 @@ public class Twin
     {
         String json;
         /* Codes_SRS_TWIN_21_021: [The updateDesiredProperty shall add all provided properties to the Desired property.] */
-        JsonElement updatedElements = properties.Desired.update(property);
+        JsonElement updatedElements = properties.updateDesired(property);
 
         if(updatedElements == null)
         {
@@ -128,7 +129,7 @@ public class Twin
     {
         String json;
         /* Codes_SRS_TWIN_21_025: [The updateReportedProperty shall add all provided properties to the Reported property.] */
-        JsonElement updatedElements = properties.Reported.update(property);
+        JsonElement updatedElements = properties.updateReported(property);
 
         if(updatedElements == null)
         {
@@ -148,38 +149,52 @@ public class Twin
 
     public void updateTwin(String json)
     {
+        Map<String, Object> jsonTree = new HashMap<String, Object>();
+        jsonTree = (Map<String, Object>) gson.fromJson(json, jsonTree.getClass());
+
+        for(Map.Entry<String, Object> entry : jsonTree.entrySet())
+        {
+            if(entry.getKey().equals("properties"))
+            {
+                properties.fromJson((LinkedTreeMap<String, Object>) entry.getValue());
+            }
+            else if(entry.getKey().equals("tags"))
+            {
+                tags.fromJson((LinkedTreeMap<String, Object>) entry.getValue());
+            }
+        }
     }
 
     public void updateDesiredProperty(String json)
     {
         /* Codes_SRS_TWIN_21_029: [The updateDesiredProperty shall update the Desired property using the information provided in the json.] */
         /* Codes_SRS_TWIN_21_030: [The updateDesiredProperty shall generate a map with all pairs key value that had its content changed.] */
-        reportedDesiredChanged(properties.Desired.fromJson(json));
+        reportedDesiredChanged(properties.fromJsonDesired(json));
     }
 
     public void updateReportedProperty(String json)
     {
         /* Codes_SRS_TWIN_21_034: [The updateReportedProperty shall update the Reported property using the information provided in the json.] */
         /* Codes_SRS_TWIN_21_035: [The updateReportedProperty shall generate a map with all pairs key value that had its content changed.] */
-        reportedReportedChanged(properties.Reported.fromJson(json));
+        reportedReportedChanged(properties.fromJsonReported(json));
     }
 
     public Integer getDesiredPropertyVersion()
     {
-        return properties.Desired.GetVersion();
+        return properties.getDesiredVersion();
     }
 
     public Integer getReportedPropertyVersion()
     {
-        return properties.Reported.GetVersion();
+        return properties.getReportedVersion();
     }
 
     public HashMap<String, String> getDesiredPropertyMap() {
-        return properties.Desired.GetPropertyMap();
+        return properties.getDesiredPropertyMap();
     }
 
     public HashMap<String, String> getReportedPropertyMap() {
-        return properties.Reported.GetPropertyMap();
+        return properties.getReportedPropertyMap();
     }
 
     protected static void reportedDesiredChanged(HashMap<String, String> diff)

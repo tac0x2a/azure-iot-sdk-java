@@ -9,10 +9,16 @@ import com.microsoft.azure.sdk.iot.deps.serializer.*;
 import mockit.Deencapsulation;
 import org.junit.Test;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.TimeZone;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -21,6 +27,9 @@ import static org.junit.Assert.assertNull;
  * Unit tests for Twin serializer
  */
 public class TwinTest {
+
+    private static final String DATEFORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSS'Z'";
+    private static final String TIMEZONE = "UTC";
 
     protected static class OnDesiredCallback implements TwinPropertiesChangeCallback
     {
@@ -33,11 +42,31 @@ public class TwinTest {
 
     protected static class OnReportedCallback implements TwinPropertiesChangeCallback
     {
-        public HashMap<String, String> diff = null;
+        protected HashMap<String, String> diff = null;
         public void execute(HashMap<String , String> propertyMap)
         {
             diff = propertyMap;
         }
+    }
+
+    private void assetWithError(String dt1Str, String dt2Str)
+    {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATEFORMAT);
+        dateFormat.setTimeZone(TimeZone.getTimeZone(TIMEZONE));
+        Date dt1 = null;
+        Date dt2 = null;
+
+        try {
+            dt1 = dateFormat.parse(dt1Str);
+            dt2 = dateFormat.parse(dt2Str);
+        }
+        catch (ParseException e) {
+            assert(true);
+        }
+
+        long error = Math.abs(dt1.getTime()-dt2.getTime());
+
+        assertThat(error, lessThanOrEqualTo(100L));
     }
 
     /* Codes_SRS_TWIN_21_001: [The constructor shall create an instance of the properties.] */
@@ -172,7 +201,7 @@ public class TwinTest {
     }
 
     /* Codes_SRS_TWIN_21_020: [The enableMetadata shall create an instance of the Metadata fro the Desired and for the Reported Properties.] */
-    @Test
+/*    @Test
     public void toJson_emptyClass_withMetadata_succeed()
     {
         // Arrange
@@ -185,7 +214,7 @@ public class TwinTest {
         String json = twin.toJson();
         assertThat(json, is("{\"properties\":{\"desired\":{\"$version\":0,\"$metadata\":{}},\"reported\":{\"$version\":0,\"$metadata\":{}}}}"));
     }
-
+*/
     /* Codes_SRS_TWIN_21_021: [The updateDesiredProperty shall add all provided properties to the Desired property.] */
     @Test
     public void updateDesiredProperty_succeed()
@@ -227,6 +256,8 @@ public class TwinTest {
         newValues.put("key2", 1234);
         newValues.put("key3", "value3");
 
+        try { Thread.sleep(1000); } catch (InterruptedException e) {}
+
         // Act
         String json = twin.updateDesiredProperty(newValues);
 
@@ -243,9 +274,9 @@ public class TwinTest {
         assertThat(resultJson.GetMetadata("key1").GetLastUpdateVersion(), is(originJson.GetMetadata("key1").GetLastUpdateVersion()));
         assertThat(resultJson.GetMetadata("key2").GetLastUpdateVersion(), is(originJson.GetMetadata("key2").GetLastUpdateVersion()));
         assertThat(resultJson.GetMetadata("key3").GetLastUpdateVersion(), is(originJson.GetMetadata("key3").GetLastUpdateVersion()));
-//        assertThat(resultJson.GetMetadata("key1").GetLastUpdate(), is(originJson.GetMetadata("key1").GetLastUpdate()));
-//        assertThat(resultJson.GetMetadata("key2").GetLastUpdate(), is(originJson.GetMetadata("key2").GetLastUpdate()));
-//        assertThat(resultJson.GetMetadata("key3").GetLastUpdate(), is(originJson.GetMetadata("key3").GetLastUpdate()));
+        assetWithError(resultJson.GetMetadata("key1").GetLastUpdate(), originJson.GetMetadata("key1").GetLastUpdate());
+        assetWithError(resultJson.GetMetadata("key2").GetLastUpdate(), originJson.GetMetadata("key2").GetLastUpdate());
+        assetWithError(resultJson.GetMetadata("key3").GetLastUpdate(), originJson.GetMetadata("key3").GetLastUpdate());
 
         HashMap<String, String> result = twin.getDesiredPropertyMap();
         assertThat(result.size(), is(3));
@@ -257,7 +288,7 @@ public class TwinTest {
 
     /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the new desired properties with changes.] */
     @Test
-    public void updateDesiredProperty_metadataChanges_succeed()
+    public void updateDesiredProperty_OnlyMetadataChanges_succeed()
     {
         // Arrange
         Twin twin = new Twin();
@@ -267,6 +298,8 @@ public class TwinTest {
         newValues.put("key2", 1234);
         newValues.put("key3", "value3");
         twin.updateDesiredProperty(newValues);
+
+        try { Thread.sleep(1000); } catch (InterruptedException e) {}
 
         // Act
         String json = twin.updateDesiredProperty(newValues);
@@ -284,9 +317,9 @@ public class TwinTest {
         assertThat(resultJson.GetMetadata("key1").GetLastUpdateVersion(), is(originJson.GetMetadata("key1").GetLastUpdateVersion()));
         assertThat(resultJson.GetMetadata("key2").GetLastUpdateVersion(), is(originJson.GetMetadata("key2").GetLastUpdateVersion()));
         assertThat(resultJson.GetMetadata("key3").GetLastUpdateVersion(), is(originJson.GetMetadata("key3").GetLastUpdateVersion()));
-//        assertThat(resultJson.GetMetadata("key1").GetLastUpdate(), is(originJson.GetMetadata("key1").GetLastUpdate()));
-//        assertThat(resultJson.GetMetadata("key2").GetLastUpdate(), is(originJson.GetMetadata("key2").GetLastUpdate()));
-//        assertThat(resultJson.GetMetadata("key3").GetLastUpdate(), is(originJson.GetMetadata("key3").GetLastUpdate()));
+        assetWithError(resultJson.GetMetadata("key1").GetLastUpdate(), originJson.GetMetadata("key1").GetLastUpdate());
+        assetWithError(resultJson.GetMetadata("key2").GetLastUpdate(), originJson.GetMetadata("key2").GetLastUpdate());
+        assetWithError(resultJson.GetMetadata("key3").GetLastUpdate(), originJson.GetMetadata("key3").GetLastUpdate());
 
         HashMap<String, String> result = twin.getDesiredPropertyMap();
         assertThat(result.size(), is(3));
@@ -665,7 +698,7 @@ public class TwinTest {
 
     /* Codes_SRS_TWIN_21_038: [If there is no change in the Reported property, the updateReportedProperty shall not call the OnReportedCallback.] */
     @Test
-    public void updateReportedProperty_json_noChanges_emptyClass_succeed()
+    public void updateReportedProperty_json_noChanges_succeed()
     {
         // Arrange
         OnReportedCallback onReportedCallback = new OnReportedCallback();
@@ -790,7 +823,7 @@ public class TwinTest {
 
     /* Codes_SRS_TWIN_21_033: [If there is no change in the Desired property, the updateDesiredProperty shall not call the OnDesiredCallback.] */
     @Test
-    public void updateDesiredProperty_json_noChanges_emptyClass_succeed()
+    public void updateDesiredProperty_json_noChanges_succeed()
     {
         // Arrange
         OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
@@ -817,4 +850,33 @@ public class TwinTest {
         assertThat(keydb, is(1234.0));
         assertThat(result.get("key3"), is("value3"));
     }
+
+/*    @Test
+    public void updateTwin_json_emptyClass_succeed()
+    {
+        // Arrange
+        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
+        Twin twin = new Twin();
+        twin.setDesiredCallback(onDesiredCallback);
+
+        String json = "{\"properties\":{\"desired\":{\"key1\":\"value1\",\"key2\":1234,\"key3\":\"value3\"}},\"reported\":{}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        assertThat(onDesiredCallback.diff.size(), is(3));
+        assertThat(onDesiredCallback.diff.get("key1"), is("value1"));
+        double keydb = Double.parseDouble(onDesiredCallback.diff.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(onDesiredCallback.diff.get("key3"), is("value3"));
+
+        HashMap<String, String> result = twin.getDesiredPropertyMap();
+        assertThat(result.size(), is(3));
+        assertThat(result.get("key1"), is("value1"));
+        keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
+    }
+    */
 }

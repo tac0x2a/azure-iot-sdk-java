@@ -24,7 +24,7 @@ public class TwinPropertiesTest {
         TwinProperties twinProperties = new TwinProperties();
 
         // Assert
-        assertThat(twinProperties.Desired.GetVersion(), is(0));
-        assertThat(twinProperties.Reported.GetVersion(), is(0));
+        assertThat(twinProperties.getDesiredVersion(), is(0));
+        assertThat(twinProperties.getReportedVersion(), is(0));
     }
 }
