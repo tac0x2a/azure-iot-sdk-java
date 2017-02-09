@@ -160,7 +160,7 @@ public class TwinTest {
         assertThat(json, is("{\"tags\":{},\"properties\":{\"desired\":{},\"reported\":{}}}"));
     }
 
-    /* Codes_SRS_TWIN_21_020: [The enableMetadata shall create an instance of the Metadata fro the Desired and for the Reported Properties.] */
+    /* Codes_SRS_TWIN_21_020: [The enableMetadata shall enable report metadata in Json for the Desired and for the Reported Properties.] */
     @Test
     public void toJson_emptyClass_withMetadata_succeed()
     {
@@ -172,10 +172,11 @@ public class TwinTest {
 
         // Assert
         String json = twin.toJson();
-        assertThat(json, is("{\"properties\":{\"desired\":{\"$version\":0,\"$metadata\":{}},\"reported\":{\"$version\":0,\"$metadata\":{}}}}"));
+        assertThat(json, is("{\"properties\":{\"desired\":{\"$metadata\":{}},\"reported\":{\"$metadata\":{}}}}"));
     }
 
     /* Codes_SRS_TWIN_21_021: [The updateDesiredProperty shall add all provided properties to the Desired property.] */
+    /* Codes_SRS_TWIN_21_050: [The getDesiredPropertyMap shall return a map with all desired property key value pairs.] */
     @Test
     public void updateDesiredProperty_succeed()
     {
@@ -246,7 +247,7 @@ public class TwinTest {
         assertThat(result.get("key3"), is("value3"));
     }
 
-    /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the new desired properties with changes.] */
+    /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the desired properties with changes.] */
     @Test
     public void updateDesiredProperty_OnlyMetadataChanges_succeed()
     {
@@ -289,7 +290,7 @@ public class TwinTest {
         assertThat(result.get("key3"), is("value3"));
     }
 
-    /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the new desired properties with changes.] */
+    /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the desired properties with changes.] */
     @Test
     public void updateDesiredProperty_newKey_succeed()
     {
@@ -318,7 +319,7 @@ public class TwinTest {
         assertThat(result.get("key4"), is("value4"));
     }
 
-    /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the new desired properties with changes.] */
+    /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the desired properties with changes.] */
     @Test
     public void updateDesiredProperty_newValue_succeed()
     {
@@ -346,7 +347,7 @@ public class TwinTest {
         assertThat(result.get("key3"), is("value3"));
     }
 
-    /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the new desired properties with changes.] */
+    /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the desired properties with changes.] */
     @Test
     public void updateDesiredProperty_newAndOld_succeed()
     {
@@ -377,7 +378,7 @@ public class TwinTest {
         assertThat(result.get("key5"), is("value5"));
     }
 
-    /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the new desired properties with changes.] */
+    /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the desired properties with changes.] */
     @Test
     public void updateDesiredProperty_mixDesiredAndReported_succeed()
     {
@@ -455,6 +456,7 @@ public class TwinTest {
     }
 
     /* Codes_SRS_TWIN_21_025: [The updateReportedProperty shall add all provided properties to the Reported property.] */
+    /* Codes_SRS_TWIN_21_051: [The getReportedPropertyMap shall return a map with all reported property key value pairs.] */
     @Test
     public void updateReportedProperty_succeed()
     {
@@ -478,7 +480,7 @@ public class TwinTest {
         assertThat(result.get("key3"), is("value3"));
     }
 
-    /* Codes_SRS_TWIN_21_026: [The updateReportedProperty shall return a string with json representing the new Reported properties with changes.] */
+    /* Codes_SRS_TWIN_21_026: [The updateReportedProperty shall return a string with json representing the Reported properties with changes.] */
     @Test
     public void updateReportedProperty_newAndOld_succeed()
     {
@@ -510,7 +512,7 @@ public class TwinTest {
         assertThat(result.get("key5"), is("value5"));
     }
 
-    /* Codes_SRS_TWIN_21_026: [The updateReportedProperty shall return a string with json representing the new Reported properties with changes.] */
+    /* Codes_SRS_TWIN_21_026: [The updateReportedProperty shall return a string with json representing the Reported properties with changes.] */
     @Test
     public void updateReportedProperty_mixDesiredAndReported_succeed()
     {
@@ -819,8 +821,12 @@ public class TwinTest {
     /* Codes_SRS_TWIN_21_012: [The constructor shall set Tags as null.] */
     /* Codes_SRS_TWIN_21_010: [The constructor shall set OnDesiredCallback with the provided Callback function.] */
     /* Codes_SRS_TWIN_21_011: [The constructor shall set OnReportedCallback with the provided Callback function.] */
+    /* Codes_SRS_TWIN_21_039: [The updateTwin shall fill the fields the properties in the Twin class with the keys and values provided in the json string.] */
+    /* Codes_SRS_TWIN_21_041: [The updateTwin shall create a list with all properties that was updated (new key or value) by the new json.] */
+    /* Codes_SRS_TWIN_21_044: [If OnDesiredCallback was provided, the updateTwin shall create a new map with a copy of all pars key values updated by the json in the Desired property, and OnDesiredCallback passing this map as parameter.] */
+    /* Codes_SRS_TWIN_21_045: [If OnReportedCallback was provided, the updateTwin shall create a new map with a copy of all pars key values updated by the json in the Reported property, and OnReportedCallback passing this map as parameter.] */
     @Test
-    public void updateTwin_json_emptyClass_succeed()
+    public void updateTwin_json_emptyClass_noMetadata_succeed()
     {
         // Arrange
         OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
@@ -860,6 +866,476 @@ public class TwinTest {
         assertThat(keydb, is(1234.124));
         assertThat(result.get("key5"), is("value5"));
         assertThat(result.get("key7"), is("true"));
+    }
+
+    /* Codes_SRS_TWIN_21_046: [If OnDesiredCallback was not provided, the updateTwin shall not do anything with the list of updated desired properties.] */
+    /* Codes_SRS_TWIN_21_047: [If OnReportedCallback was not provided, the updateTwin shall not do anything with the list of updated reported properties.] */
+    @Test
+    public void updateTwin_json_emptyClass_noCallback_succeed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "{\"properties\":{\"desired\":{\"key1\":\"value1\",\"key2\":1234.0,\"key3\":\"value3\"},\"reported\":{\"key1\":\"value1\",\"key2\":1234.124,\"key5\":\"value5\",\"key7\":true}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        String resultJson = twin.toJson();
+        assertThat(resultJson, is(json));
+    }
+
+    /* Codes_SRS_TWIN_21_039: [The updateTwin shall fill the fields the properties in the Twin class with the keys and values provided in the json string.] */
+    /* Codes_SRS_TWIN_21_041: [The updateTwin shall create a list with all properties that was updated (new key or value) by the new json.] */
+    /* Codes_SRS_TWIN_21_048: [The getDesiredPropertyVersion shall return the desired property version.] */
+    /* Codes_SRS_TWIN_21_049: [The getReportedPropertyVersion shall return the reported property version.] */
+    @Test
+    public void updateTwin_json_emptyClass_withFullMetadata_succeed()
+    {
+        // Arrange
+        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
+        OnReportedCallback onReportedCallback = new OnReportedCallback();
+        Twin twin = new Twin(onDesiredCallback, onReportedCallback);
+        twin.enableMetadata();
+
+        String json =
+            "{" +
+                "\"properties\":{"+
+                    "\"desired\":{" +
+                        "\"key1\":\"value1\"," +
+                        "\"key2\":1234.0," +
+                        "\"key3\":\"value3\"," +
+                        "\"$version\":3," +
+                        "\"$metadata\":{" +
+                            "\"key1\":{" +
+                                "\"$lastUpdated\":\"2017-02-09T08:13:12.3456Z\"," +
+                                "\"$lastUpdatedVersion\":3" +
+                            "}," +
+                            "\"key2\":{" +
+                                "\"$lastUpdated\":\"2017-02-09T08:13:12.3457Z\"," +
+                                "\"$lastUpdatedVersion\":5" +
+                            "}," +
+                            "\"key3\":{" +
+                                "\"$lastUpdated\":\"2017-02-09T08:13:12.3458Z\"," +
+                                "\"$lastUpdatedVersion\":3" +
+                            "}" +
+                        "}" +
+                    "}," +
+                    "\"reported\":{" +
+                        "\"key1\":\"value1\"," +
+                        "\"key2\":1234.124," +
+                        "\"key5\":\"value5\"," +
+                        "\"key7\":true," +
+                        "\"$version\":5," +
+                        "\"$metadata\":{" +
+                            "\"key1\":{" +
+                                "\"$lastUpdated\":\"2017-02-09T08:13:12.3456Z\"," +
+                                "\"$lastUpdatedVersion\":3" +
+                            "}," +
+                            "\"key2\":{" +
+                                "\"$lastUpdated\":\"2017-02-09T08:13:12.3457Z\"," +
+                                "\"$lastUpdatedVersion\":5" +
+                            "}," +
+                            "\"key5\":{" +
+                                "\"$lastUpdated\":\"2017-02-09T08:13:12.3457Z\"," +
+                                "\"$lastUpdatedVersion\":5" +
+                            "}," +
+                            "\"key7\":{" +
+                                "\"$lastUpdated\":\"2017-02-09T08:13:12.3458Z\"," +
+                                "\"$lastUpdatedVersion\":3" +
+                            "}" +
+                        "}" +
+                    "}" +
+                "}" +
+            "}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        assertThat(onDesiredCallback.diff.size(), is(3));
+        assertThat(onDesiredCallback.diff.get("key1"), is("value1"));
+        double keydb = Double.parseDouble(onDesiredCallback.diff.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(onDesiredCallback.diff.get("key3"), is("value3"));
+
+        assertThat(onReportedCallback.diff.size(), is(4));
+        assertThat(onReportedCallback.diff.get("key1"), is("value1"));
+        keydb = Double.parseDouble(onReportedCallback.diff.get("key2"));
+        assertThat(keydb, is(1234.124));
+        assertThat(onReportedCallback.diff.get("key5"), is("value5"));
+        assertThat(onReportedCallback.diff.get("key7"), is("true"));
+
+        String resultJson = twin.toJson();
+        assertThat(resultJson, is(json));
+        assertThat(twin.getReportedPropertyVersion(), is(5));
+        assertThat(twin.getDesiredPropertyVersion(), is(3));
+    }
+
+    /* Codes_SRS_TWIN_21_039: [The updateTwin shall fill the fields the properties in the Twin class with the keys and values provided in the json string.] */
+    /* Codes_SRS_TWIN_21_040: [The updateTwin shall not change fields that is not reported in the json string.] */
+    @Test
+    public void updateTwin_json_emptyClass_withMetadataNoUpdateVersion_succeed()
+    {
+        // Arrange
+        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
+        OnReportedCallback onReportedCallback = new OnReportedCallback();
+        Twin twin = new Twin(onDesiredCallback, onReportedCallback);
+        twin.enableMetadata();
+
+        String json =
+                "{" +
+                "\"properties\":{"+
+                "\"desired\":{" +
+                "\"key1\":\"value1\"," +
+                "\"key2\":1234.0," +
+                "\"key3\":\"value3\"," +
+                "\"$version\":0," +
+                "\"$metadata\":{" +
+                "\"key1\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3456Z\"" +
+                "}," +
+                "\"key2\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3457Z\"" +
+                "}," +
+                "\"key3\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3458Z\"" +
+                "}" +
+                "}" +
+                "}," +
+                "\"reported\":{" +
+                "\"key1\":\"value1\"," +
+                "\"key2\":1234.124," +
+                "\"key5\":\"value5\"," +
+                "\"key7\":true," +
+                "\"$version\":0," +
+                "\"$metadata\":{" +
+                "\"key1\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3456Z\"" +
+                "}," +
+                "\"key2\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3457Z\"" +
+                "}," +
+                "\"key5\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3457Z\"" +
+                "}," +
+                "\"key7\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3458Z\"" +
+                "}" +
+                "}" +
+                "}" +
+                "}" +
+                "}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        assertThat(onDesiredCallback.diff.size(), is(3));
+        assertThat(onDesiredCallback.diff.get("key1"), is("value1"));
+        double keydb = Double.parseDouble(onDesiredCallback.diff.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(onDesiredCallback.diff.get("key3"), is("value3"));
+
+        assertThat(onReportedCallback.diff.size(), is(4));
+        assertThat(onReportedCallback.diff.get("key1"), is("value1"));
+        keydb = Double.parseDouble(onReportedCallback.diff.get("key2"));
+        assertThat(keydb, is(1234.124));
+        assertThat(onReportedCallback.diff.get("key5"), is("value5"));
+        assertThat(onReportedCallback.diff.get("key7"), is("true"));
+
+        String resultJson = twin.toJson();
+        assertThat(resultJson, is(json));
+    }
+
+    /* Codes_SRS_TWIN_21_039: [The updateTwin shall fill the fields the properties in the Twin class with the keys and values provided in the json string.] */
+    /* Codes_SRS_TWIN_21_040: [The updateTwin shall not change fields that is not reported in the json string.] */
+    @Test
+    public void updateTwin_json_emptyClass_withFullMetadataNoVersion_succeed()
+    {
+        // Arrange
+        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
+        OnReportedCallback onReportedCallback = new OnReportedCallback();
+        Twin twin = new Twin(onDesiredCallback, onReportedCallback);
+        twin.enableMetadata();
+
+        String json =
+                "{" +
+                "\"properties\":{"+
+                "\"desired\":{" +
+                "\"key1\":\"value1\"," +
+                "\"key2\":1234.0," +
+                "\"key3\":\"value3\"," +
+                "\"$metadata\":{" +
+                "\"key1\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3456Z\"," +
+                "\"$lastUpdatedVersion\":3" +
+                "}," +
+                "\"key2\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3457Z\"," +
+                "\"$lastUpdatedVersion\":5" +
+                "}," +
+                "\"key3\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3458Z\"," +
+                "\"$lastUpdatedVersion\":3" +
+                "}" +
+                "}" +
+                "}," +
+                "\"reported\":{" +
+                "\"key1\":\"value1\"," +
+                "\"key2\":1234.124," +
+                "\"key5\":\"value5\"," +
+                "\"key7\":true," +
+                "\"$metadata\":{" +
+                "\"key1\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3456Z\"," +
+                "\"$lastUpdatedVersion\":3" +
+                "}," +
+                "\"key2\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3457Z\"," +
+                "\"$lastUpdatedVersion\":5" +
+                "}," +
+                "\"key5\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3457Z\"," +
+                "\"$lastUpdatedVersion\":5" +
+                "}," +
+                "\"key7\":{" +
+                "\"$lastUpdated\":\"2017-02-09T08:13:12.3458Z\"," +
+                "\"$lastUpdatedVersion\":3" +
+                "}" +
+                "}" +
+                "}" +
+                "}" +
+                "}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        assertThat(onDesiredCallback.diff.size(), is(3));
+        assertThat(onDesiredCallback.diff.get("key1"), is("value1"));
+        double keydb = Double.parseDouble(onDesiredCallback.diff.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(onDesiredCallback.diff.get("key3"), is("value3"));
+
+        assertThat(onReportedCallback.diff.size(), is(4));
+        assertThat(onReportedCallback.diff.get("key1"), is("value1"));
+        keydb = Double.parseDouble(onReportedCallback.diff.get("key2"));
+        assertThat(keydb, is(1234.124));
+        assertThat(onReportedCallback.diff.get("key5"), is("value5"));
+        assertThat(onReportedCallback.diff.get("key7"), is("true"));
+
+        String resultJson = twin.toJson();
+        assertThat(resultJson, is(json));
+    }
+
+    /* Codes_SRS_TWIN_21_040: [The updateTwin shall not change fields that is not reported in the json string.] */
+    /* Codes_SRS_TWIN_21_041: [The updateTwin shall create a list with all properties that was updated (new key or value) by the new json.] */
+    /* Codes_SRS_TWIN_21_044: [If OnDesiredCallback was provided, the updateTwin shall create a new map with a copy of all pars key values updated by the json in the Desired property, and OnDesiredCallback passing this map as parameter.] */
+    /* Codes_SRS_TWIN_21_045: [If OnReportedCallback was provided, the updateTwin shall create a new map with a copy of all pars key values updated by the json in the Reported property, and OnReportedCallback passing this map as parameter.] */
+    @Test
+    public void updateTwin_json_changeOneField_succeed()
+    {
+        // Arrange
+        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
+        OnReportedCallback onReportedCallback = new OnReportedCallback();
+        Twin twin = new Twin(onDesiredCallback, onReportedCallback);
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234);
+        newValues.put("key3", "value3");
+        twin.updateReportedProperty(newValues);
+        newValues.clear();
+        newValues.put("key1", "value4");
+        newValues.put("key2", 1234);
+        newValues.put("key6", "value6");
+        newValues.put("key7", true);
+        twin.updateDesiredProperty(newValues);
+
+        String json = "{\"properties\":{" +
+                "\"desired\":{\"key2\":9875}," +
+                "\"reported\":{\"key1\":\"value4\"}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        assertThat(onDesiredCallback.diff.size(), is(1));
+        double keydb = Double.parseDouble(onDesiredCallback.diff.get("key2"));
+        assertThat(keydb, is(9875.0));
+
+        assertThat(onReportedCallback.diff.size(), is(1));
+        assertThat(onReportedCallback.diff.get("key1"), is("value4"));
+
+        HashMap<String, String> result = twin.getDesiredPropertyMap();
+        assertThat(result.size(), is(4));
+        assertThat(result.get("key1"), is("value4"));
+        keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(9875.0));
+        assertThat(result.get("key6"), is("value6"));
+        assertThat(result.get("key7"), is("true"));
+
+        result = twin.getReportedPropertyMap();
+        assertThat(result.size(), is(3));
+        assertThat(result.get("key1"), is("value4"));
+        keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
+    }
+
+    /* Codes_SRS_TWIN_21_041: [The updateTwin shall create a list with all properties that was updated (new key or value) by the new json.] */
+    /* Codes_SRS_TWIN_21_042: [If a valid key has a null value, the updateTwin shall delete this property.] */
+    /* Codes_SRS_TWIN_21_044: [If OnDesiredCallback was provided, the updateTwin shall create a new map with a copy of all pars key values updated by the json in the Desired property, and OnDesiredCallback passing this map as parameter.] */
+    /* Codes_SRS_TWIN_21_045: [If OnReportedCallback was provided, the updateTwin shall create a new map with a copy of all pars key values updated by the json in the Reported property, and OnReportedCallback passing this map as parameter.] */
+    @Test
+    public void updateTwin_json_deleteField_noMetadata_succeed()
+    {
+        // Arrange
+        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
+        OnReportedCallback onReportedCallback = new OnReportedCallback();
+        Twin twin = new Twin(onDesiredCallback, onReportedCallback);
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234);
+        newValues.put("key3", "value3");
+        twin.updateDesiredProperty(newValues);
+        newValues.clear();
+        newValues.put("key1", "value4");
+        newValues.put("key2", 1234);
+        newValues.put("key6", "value6");
+        newValues.put("key7", true);
+        twin.updateReportedProperty(newValues);
+
+        String json = "{\"properties\":{" +
+                "\"desired\":{\"key3\":null,\"key1\":\"value4\"}," +
+                "\"reported\":{\"key1\":null,\"key5\":null,\"key7\":null}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        assertThat(onDesiredCallback.diff.size(), is(2));
+        assertNull(onDesiredCallback.diff.get("key3"));
+        assertThat(onDesiredCallback.diff.get("key1"), is("value4"));
+
+        assertThat(onReportedCallback.diff.size(), is(2));
+        assertNull(onReportedCallback.diff.get("key1"));
+        assertNull(onReportedCallback.diff.get("key7"));
+
+        HashMap<String, String> result = twin.getDesiredPropertyMap();
+        assertThat(result.size(), is(2));
+        assertThat(result.get("key1"), is("value4"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+
+        result = twin.getReportedPropertyMap();
+        assertThat(result.size(), is(2));
+        keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key6"), is("value6"));
+    }
+
+    /* Codes_SRS_TWIN_21_043: [If the provided json is not valid, the updateTwin shall throws IllegalArgumentException.] */
+    @Test (expected = IllegalArgumentException.class)
+    public void updateTwin_json_missing_comma_failed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "{\"properties\":{" +
+                "\"desired\":{\"key3\":null,\"key1\":\"value4\"}" +
+                "\"reported\":{\"key1\":null,\"key5\":null,\"key7\":null}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+    }
+
+    /* Codes_SRS_TWIN_21_043: [If the provided json is not valid, the updateTwin shall throws IllegalArgumentException.] */
+    @Test (expected = IllegalArgumentException.class)
+    public void updateTwin_json_badProperties_failed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "{\"property\":{" +
+                "\"desired\":{\"key3\":null,\"key1\":\"value4\"}," +
+                "\"reported\":{\"key1\":null,\"key5\":null,\"key7\":null}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+    }
+
+    /* Codes_SRS_TWIN_21_043: [If the provided json is not valid, the updateTwin shall throws IllegalArgumentException.] */
+    @Test (expected = IllegalArgumentException.class)
+    public void updateTwin_json_unknownProperty_failed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "{\"property\":{" +
+                "\"barProperty\":{\"key3\":null,\"key1\":\"value4\"}," +
+                "\"reported\":{\"key1\":null,\"key5\":null,\"key7\":null}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+    }
+
+    /* Codes_SRS_TWIN_21_043: [If the provided json is not valid, the updateTwin shall throws IllegalArgumentException.] */
+    @Test (expected = IllegalArgumentException.class)
+    public void updateTwin_json_InvalidKey_failed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "{\"properties\":{" +
+                "\"desired\":{\"\":null,\"key1\":\"value4\"}," +
+                "\"reported\":{\"key1\":null,\"key5\":null,\"key7\":null}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+    }
+
+    /* Codes_SRS_TWIN_21_043: [If the provided json is not valid, the updateTwin shall throws IllegalArgumentException.] */
+    @Test (expected = IllegalArgumentException.class)
+    public void updateTwin_json_noKey_failed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "{\"properties\":{" +
+                "\"desired\":{:null,\"key1\":\"value4\"}," +
+                "\"reported\":{\"key1\":null,\"key5\":null,\"key7\":null}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+    }
+
+    /* Codes_SRS_TWIN_21_043: [If the provided json is not valid, the updateTwin shall throws IllegalArgumentException.] */
+    @Test (expected = IllegalArgumentException.class)
+    public void updateTwin_json_InvalidValue_failed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "{\"properties\":{" +
+                "\"desired\":{\"Key3\":,\"key1\":\"value4\"}," +
+                "\"reported\":{\"key1\":null,\"key5\":null,\"key7\":null}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
     }
 
 }

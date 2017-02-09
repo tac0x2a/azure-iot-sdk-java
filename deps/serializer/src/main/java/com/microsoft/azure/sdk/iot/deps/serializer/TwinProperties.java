@@ -55,7 +55,9 @@ public class TwinProperties
         return (JsonElement) propertiesJson;
     }
 
-    public void update(LinkedTreeMap<String, Object> jsonTree, TwinPropertiesChangeCallback onDesiredCallback, TwinPropertiesChangeCallback onReportedCallback)
+    public void update(LinkedTreeMap<String, Object> jsonTree,
+                       TwinPropertiesChangeCallback onDesiredCallback, TwinPropertiesChangeCallback onReportedCallback)
+            throws IllegalArgumentException
     {
         for(Map.Entry<String, Object> entry : jsonTree.entrySet())
         {
@@ -66,6 +68,10 @@ public class TwinProperties
             else if(entry.getKey().equals("reported"))
             {
                 Reported.update((LinkedTreeMap<String, Object>) entry.getValue(), onReportedCallback);
+            }
+            else
+            {
+                throw new IllegalArgumentException("Invalid Property");
             }
         }
 

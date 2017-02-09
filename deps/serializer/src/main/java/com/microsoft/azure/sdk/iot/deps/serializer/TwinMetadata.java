@@ -29,23 +29,43 @@ public class TwinMetadata {
     public TwinMetadata()
     {
         update();
-        lastUpdatedVersion = 0;
+        lastUpdatedVersion = null;
     }
 
     public TwinMetadata(Integer version)
     {
         update();
-        if(version != null) {
-            lastUpdatedVersion = version;
-        }
+        lastUpdatedVersion = version;
     }
 
     public TwinMetadata(Integer version, String dateTime)
     {
         lastUpdated = dateTime;
-        if(version != null) {
-            lastUpdatedVersion = version;
+        lastUpdatedVersion = version;
+    }
+
+    public boolean update(String dateTime, Integer version)
+    {
+        boolean updated;
+
+        if (!lastUpdated.equals(dateTime)) {
+            updated = true;
+        } else if(lastUpdatedVersion == null) {
+            if(version == null) {
+                updated = false;
+            } else {
+                updated = true;
+            }
+        } else if(lastUpdatedVersion.equals(version)) {
+            updated = false;
+        } else {
+            updated = true;
         }
+
+        lastUpdated = dateTime;
+        lastUpdatedVersion = version;
+
+        return updated;
     }
 
     public void update(int version)

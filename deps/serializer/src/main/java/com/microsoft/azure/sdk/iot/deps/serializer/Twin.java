@@ -77,7 +77,7 @@ public class Twin
 
     public void enableMetadata()
     {
-        /* Codes_SRS_TWIN_21_020: [The enableMetadata shall create an instance of the Metadata fro the Desired and for the Reported Properties.] */
+        /* Codes_SRS_TWIN_21_020: [The enableMetadata shall enable report metadata in Json for the Desired and for the Reported Properties.] */
         properties.enableDesiredMetadata();
         properties.enableReportedMetadata();
     }
@@ -118,7 +118,7 @@ public class Twin
         }
         else
         {
-            /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the new desired properties with changes.] */
+            /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the desired properties with changes.] */
             json = updatedElements.toString();
         }
 
@@ -139,7 +139,7 @@ public class Twin
         }
         else
         {
-            /* Codes_SRS_TWIN_21_026: [The updateReportedProperty shall return a string with json representing the new Reported properties with changes.] */
+            /* Codes_SRS_TWIN_21_026: [The updateReportedProperty shall return a string with json representing the Reported properties with changes.] */
             json = updatedElements.toString();
         }
 
@@ -147,26 +147,41 @@ public class Twin
     }
 
 
-    public void updateTwin(String json)
+    public void updateTwin(String json) throws IllegalArgumentException
     {
         Map<String, Object> jsonTree = new HashMap<String, Object>();
-        jsonTree = (Map<String, Object>) gson.fromJson(json, jsonTree.getClass());
-
+        try {
+            jsonTree = (Map<String, Object>) gson.fromJson(json, jsonTree.getClass());
+        } catch (Exception e) {
+            /* Codes_SRS_TWIN_21_043: [If the provided json is not valid, the updateTwin shall throws IllegalArgumentException.] */
+            throw new IllegalArgumentException("Malformed Json:" + e);
+        }
         for(Map.Entry<String, Object> entry : jsonTree.entrySet())
         {
             if(entry.getKey().equals("properties"))
             {
+                /* Codes_SRS_TWIN_21_039: [The updateTwin shall fill the fields the properties in the Twin class with the keys and values provided in the json string.] */
+                /* Codes_SRS_TWIN_21_040: [The updateTwin shall not change fields that is not reported in the json string.] */
+                /* Codes_SRS_TWIN_21_041: [The updateTwin shall create a list with all properties that was updated (new key or value) by the new json.] */
+                /* Codes_SRS_TWIN_21_042: [If a valid key has a null value, the updateTwin shall delete this property.] */
+                /* Codes_SRS_TWIN_21_044: [If OnDesiredCallback was provided, the updateTwin shall create a new map with a copy of all pars key values updated by the json in the Desired property, and OnDesiredCallback passing this map as parameter.] */
+                /* Codes_SRS_TWIN_21_045: [If OnReportedCallback was provided, the updateTwin shall create a new map with a copy of all pars key values updated by the json in the Reported property, and OnReportedCallback passing this map as parameter.] */
+                /* Codes_SRS_TWIN_21_046: [If OnDesiredCallback was not provided, the updateTwin shall not do anything with the list of updated desired properties.] */
+                /* Codes_SRS_TWIN_21_047: [If OnReportedCallback was not provided, the updateTwin shall not do anything with the list of updated reported properties.] */
                 properties.update((LinkedTreeMap<String, Object>) entry.getValue(), onDesiredCallback, onReportedCallback);
             }
             else if(entry.getKey().equals("tags"))
             {
                 tags.fromJson((LinkedTreeMap<String, Object>) entry.getValue());
             }
+            else
+            {
+                throw new IllegalArgumentException("Invalid Entry");
+            }
         }
     }
 
-    public void updateDesiredProperty(String json)
-    {
+    public void updateDesiredProperty(String json) {
         /* Codes_SRS_TWIN_21_029: [The updateDesiredProperty shall update the Desired property using the information provided in the json.] */
         /* Codes_SRS_TWIN_21_030: [The updateDesiredProperty shall generate a map with all pairs key value that had its content changed.] */
         /* Codes_SRS_TWIN_21_031: [The updateDesiredProperty shall send the map with all changed pairs to the upper layer calling onDesiredCallback (TwinPropertiesChangeCallback).] */
@@ -175,8 +190,7 @@ public class Twin
         properties.updateDesired(json, onDesiredCallback);
     }
 
-    public void updateReportedProperty(String json)
-    {
+    public void updateReportedProperty(String json) {
         /* Codes_SRS_TWIN_21_034: [The updateReportedProperty shall update the Reported property using the information provided in the json.] */
         /* Codes_SRS_TWIN_21_035: [The updateReportedProperty shall generate a map with all pairs key value that had its content changed.] */
         /* Codes_SRS_TWIN_21_036: [The updateReportedProperty shall send the map with all changed pairs to the upper layer calling onReportedCallback (TwinPropertiesChangeCallback).] */
@@ -185,21 +199,23 @@ public class Twin
         properties.updateReported(json, onReportedCallback);
     }
 
-    public Integer getDesiredPropertyVersion()
-    {
+    public Integer getDesiredPropertyVersion() {
+        /* Codes_SRS_TWIN_21_048: [The getDesiredPropertyVersion shall return the desired property version.] */
         return properties.getDesiredVersion();
     }
 
-    public Integer getReportedPropertyVersion()
-    {
+    public Integer getReportedPropertyVersion() {
+        /* Codes_SRS_TWIN_21_049: [The getReportedPropertyVersion shall return the reported property version.] */
         return properties.getReportedVersion();
     }
 
     public HashMap<String, String> getDesiredPropertyMap() {
+        /* Codes_SRS_TWIN_21_050: [The getDesiredPropertyMap shall return a map with all desired property key value pairs.] */
         return properties.getDesiredPropertyMap();
     }
 
     public HashMap<String, String> getReportedPropertyMap() {
+        /* Codes_SRS_TWIN_21_051: [The getReportedPropertyMap shall return a map with all reported property key value pairs.] */
         return properties.getReportedPropertyMap();
     }
 }

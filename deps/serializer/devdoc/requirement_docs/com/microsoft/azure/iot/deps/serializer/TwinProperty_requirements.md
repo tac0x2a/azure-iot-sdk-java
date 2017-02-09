@@ -40,14 +40,14 @@ public class TwinProperty extends HashMap<String, Object> {
 ```
 
 **SRS_TWIN_PROPERTY_21_001: [**The constructor shall call the constructor for the superClass.**]**  
-**SRS_TWIN_PROPERTY_21_002: [**The constructor shall store set version equals 0.**]**  
+**SRS_TWIN_PROPERTY_21_002: [**The constructor shall set version as null.**]**  
 
 ```java
     public TwinProperty(Boolean reportMetadata);
 ```
 
 **SRS_TWIN_PROPERTY_21_003: [**The constructor shall call the constructor for the superClass.**]**  
-**SRS_TWIN_PROPERTY_21_004: [**The constructor shall store set version equals 0.**]**  
+**SRS_TWIN_PROPERTY_21_004: [**The constructor shall set version as null.**]**  
 **SRS_TWIN_PROPERTY_21_005: [**If reportMetadata is true, constructor shall create a instance of the TwinMetadata to store the property metadata.**]**  
 **SRS_TWIN_PROPERTY_21_006: [**If reportMetadata is false, constructor shall not create a instance of the TwinMetadata keeping it as null.**]**  
 

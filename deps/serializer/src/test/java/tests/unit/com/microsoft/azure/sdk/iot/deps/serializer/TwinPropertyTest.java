@@ -81,7 +81,6 @@ public class TwinPropertyTest {
         // Assert
         assertNotNull(twinProperty);
         assertThat(twinProperty.GetVersion(), is(0));
-        assertNull(twinProperty.GetMetadata());
     }
 
     /* Tests_SRS_TWIN_PROPERTY_21_005: [If reportMetadata is true, constructor shall create a instance of the TwinMetadata to store the property metadata.] */
@@ -96,7 +95,6 @@ public class TwinPropertyTest {
         // Assert
         assertNotNull(twinProperty);
         assertThat(twinProperty.GetVersion(), is(0));
-        assertNotNull(twinProperty.GetMetadata());
     }
 
     /* Tests_SRS_TWIN_PROPERTY_21_007: [The addProperty shall add the provided pair key value in the superClass' hashMap.] */
@@ -114,7 +112,7 @@ public class TwinPropertyTest {
         // Assert
         assertEquals(twinProperty.size(), 1);
         assertThat(twinProperty.get("key1").toString(), is("value1"));
-        assertNull(twinProperty.GetMetadata());
+        assertNull(twinProperty.GetMetadata("key1"));
     }
 
     /* Tests_SRS_TWIN_PROPERTY_21_008: [The addProperty shall create an instance of the metadata related to the provided key and version.] */

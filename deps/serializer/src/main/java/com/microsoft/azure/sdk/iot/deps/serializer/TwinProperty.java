@@ -22,44 +22,54 @@ public class TwinProperty {
     private static final String lastUpdateTag = "$lastUpdated";
     private static final String lastUpdateVersionTag = "$lastUpdatedVersion";
 
-    private HashMap<String, Object> property;
-    private HashMap<String, TwinMetadata> metadata;
+    public class Property
+    {
+        protected Object value;
+        protected TwinMetadata metadata;
+        public Property(Object val, Integer propertyVersion)
+        {
+            this.value = val;
+            this.metadata = new TwinMetadata(propertyVersion);
+        }
+    }
+
+    private HashMap<String, Property> property;
     private Integer version;
+    private Boolean reportMetadata;
 
     public TwinProperty()
     {
         /* Codes_SRS_TWIN_PROPERTY_21_001: [The constructor shall call the constructor for the superClass.] */
         property = new HashMap<>();
-        metadata = null;
 
-        /* Codes_SRS_TWIN_PROPERTY_21_002: [The constructor shall store set version equals 0.] */
-        this.version = 0;
+        reportMetadata = false;
+
+        /* Codes_SRS_TWIN_PROPERTY_21_002: [The constructor shall set version as null.] */
+        this.version = null;
     }
 
     public TwinProperty(Boolean reportMetadata)
     {
         /* Codes_SRS_TWIN_PROPERTY_21_003: [The constructor shall call the constructor for the superClass.] */
-        /* Codes_SRS_TWIN_PROPERTY_21_004: [The constructor shall store set version equals 0.] */
+        /* Codes_SRS_TWIN_PROPERTY_21_004: [The constructor shall set version as null.] */
         this();
         if(reportMetadata){
             /* Codes_SRS_TWIN_PROPERTY_21_005: [If reportMetadata is true, constructor shall create a instance of the TwinMetadata to store the property metadata.] */
-            this.metadata = new HashMap<>();
+            reportMetadata = true;
         }
         else
         {
             /* Codes_SRS_TWIN_PROPERTY_21_006: [If reportMetadata is false, constructor shall not create a instance of the TwinMetadata keeping it as null.] */
+            reportMetadata = false;
         }
     }
 
     public void enableMetadata()
     {
-        if(metadata == null)
-        {
-            metadata = new HashMap<>();
-        }
+        reportMetadata = true;
     }
 
-    public Boolean addProperty(String key, Object value, Integer version) throws IllegalArgumentException
+    public Boolean addProperty(String key, Object value, Integer propertyVersion) throws IllegalArgumentException
     {
         Boolean change = false;
 
@@ -89,22 +99,13 @@ public class TwinProperty {
             throw new IllegalArgumentException("value is empty");
         }
 
-        Object oldVal = property.get(key);
-        if((oldVal == null) || (!oldVal.equals(value)))
-        {
-            change = true;
-        }
-
-        /* Codes_SRS_TWIN_PROPERTY_21_007: [The addProperty shall add the provided pair key value in the superClass' hashMap.] */
-        /* Codes_SRS_TWIN_PROPERTY_21_017: [If the `key` already exists, the addProperty shall replace the existed value by the new one.] */
-        property.put(key, value);
-
-        /* Codes_SRS_TWIN_PROPERTY_21_011: [If the metadata is null, the addProperty shall not create or add any metadata to it.] */
-        if(metadata != null) {
+        if((!property.containsKey(key)) || (!property.get(key).value.equals(value)) || reportMetadata) {
+            /* Codes_SRS_TWIN_PROPERTY_21_007: [The addProperty shall add the provided pair key value in the superClass' hashMap.] */
+            /* Codes_SRS_TWIN_PROPERTY_21_017: [If the `key` already exists, the addProperty shall replace the existed value by the new one.] */
             /* Codes_SRS_TWIN_PROPERTY_21_008: [The addProperty shall create an instance of the metadata related to the provided key and version.] */
             /* Codes_SRS_TWIN_PROPERTY_21_010: [The addProperty shall add the created metadata to the `metadata`.] */
-            metadata.put(key, new TwinMetadata(version));
             change = true;
+            property.put(key, new Property(value, propertyVersion));
         }
 
         return change;
@@ -114,10 +115,6 @@ public class TwinProperty {
     {
         JsonElement updatedJsonElement;
         TwinProperty updated = new TwinProperty();
-        if(metadata != null)
-        {
-            updated.enableMetadata();
-        }
 
         if(property != null)
         {
@@ -152,25 +149,16 @@ public class TwinProperty {
         return this.version;
     }
 
-    public HashMap<String, TwinMetadata> GetMetadata()
-    {
-        /* Codes_SRS_TWIN_PROPERTY_21_012: [The GetMetadata shall return a hashMap to all metadata.] */
-        /* Codes_SRS_TWIN_PROPERTY_21_020: [If there is no metadata, the GetMetadata shall return null.] */
-        return metadata;
-    }
-
     public TwinMetadata GetMetadata(String key)
     {
         TwinMetadata twinMetadata;
 
-        if(metadata != null){
+        if(property.containsKey(key)) {
             /* Codes_SRS_TWIN_PROPERTY_21_021: [The GetMetadata shall return the TwinMetadata for the provided key.] */
             /* Codes_SRS_TWIN_PROPERTY_21_023: [If the key do not exists, the GetMetadata shall return null.] */
-            twinMetadata = metadata.get(key);
+            twinMetadata = property.get(key).metadata;
         }
-        else
-        {
-            /* Codes_SRS_TWIN_PROPERTY_21_022: [If there is no metadata, the GetMetadata shall return null.] */
+        else {
             twinMetadata = null;
         }
 
@@ -190,8 +178,8 @@ public class TwinProperty {
         {
             /* Codes_SRS_TWIN_PROPERTY_21_024: [The GetPropertyMap shall return a hashMap with all keys and values stored on the Twin Property.] */
             propertyMap = new HashMap<>();
-            for (Map.Entry<String, Object> e : property.entrySet()) {
-                propertyMap.put(e.getKey(), e.getValue().toString());
+            for (Map.Entry<String, Property> e : property.entrySet()) {
+                propertyMap.put(e.getKey(), e.getValue().value.toString());
             }
         }
         return propertyMap;
@@ -205,9 +193,16 @@ public class TwinProperty {
 
     public Object get(String key)
     {
-        /* Codes_SRS_TWIN_PROPERTY_21_034: [**The get shall return the property value related to the provided key.] */
-        /* Codes_SRS_TWIN_PROPERTY_21_035: [**If the key does not exists, the get shall return null.] */
-        return property.get(key);
+        Object result;
+
+        if(property.containsKey(key)) {
+            /* Codes_SRS_TWIN_PROPERTY_21_034: [**The get shall return the property value related to the provided key.] */
+            result = property.get(key).value;
+        } else {
+            /* Codes_SRS_TWIN_PROPERTY_21_035: [**If the key does not exists, the get shall return null.] */
+            result = null;
+        }
+        return result;
     }
 
     public String toJson()
@@ -220,81 +215,146 @@ public class TwinProperty {
     public JsonElement toJsonElement()
     {
         HashMap<String, Object> map = new HashMap<>();
+        HashMap<String, TwinMetadata> metadata = new HashMap<>();
 
-        for(Map.Entry<String, Object> entry : property.entrySet()) {
-            map.put(entry.getKey(), entry.getValue());
+        for(Map.Entry<String, Property> entry : property.entrySet()) {
+            map.put(entry.getKey(), entry.getValue().value);
+            metadata.put(entry.getKey(), entry.getValue().metadata);
         }
 
-        if(metadata != null) {
+        if(reportMetadata) {
             map.put(metadataTag, metadata);
+        }
+
+        if(version != null) {
             map.put(versionTag, version);
         }
+
         return gson.toJsonTree(map);
     }
 
-    public void update(LinkedTreeMap<String, Object> jsonTree, TwinPropertiesChangeCallback onCallback)
+    public void update(LinkedTreeMap<String, Object> jsonTree,
+                       TwinPropertiesChangeCallback onCallback) throws IllegalArgumentException
     {
-        HashMap<String, String> diff = null;
-        for (Map.Entry<String, Object> entry : jsonTree.entrySet()) {
-            if(entry.getKey().equals(versionTag))
+        HashMap<String, String> diffField = new HashMap<>();
+        HashMap<String, String> diffMetadata = new HashMap<>();
+
+        try {
+            updateVersion(jsonTree);
+            diffField = updateFields(jsonTree);
+            diffMetadata = updateMetadata(jsonTree);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Malformed Json:" + e);
+        }
+
+        if(reportMetadata)
+        {
+            for(Map.Entry<String, String> entry : diffMetadata.entrySet())
             {
-                /* Codes_SRS_TWIN_PROPERTY_21_030: [If the provided json contains $version, the update shall update the version.] */
-                version = (int)((double)entry.getValue());
-            }
-            else if(entry.getKey().equals(metadataTag))
-            {
-                /* Codes_SRS_TWIN_PROPERTY_21_031: [If the provided json contains $metadata, the update shall update the metadata for each provided key.] */
-                LinkedTreeMap<String, Object> metadataTree = (LinkedTreeMap<String, Object>)entry.getValue();
-                for (LinkedTreeMap.Entry<String, Object> item : metadataTree.entrySet()) {
-                    LinkedTreeMap<String, Object> itemTree = (LinkedTreeMap<String, Object>)item.getValue();
-                    String lastUpdated = null;
-                    Integer lastUpdatedVersion = null;
-                    for (LinkedTreeMap.Entry<String, Object> metadataItem : itemTree.entrySet()) {
-                        if(metadataItem.getKey().equals(lastUpdateTag)) {
-                            lastUpdated = metadataItem.getValue().toString();
-                        }
-                        else if (metadataItem.getKey().equals(lastUpdateVersionTag)) {
-                            lastUpdatedVersion = (int)((double)metadataItem.getValue());
-                        }
-                    }
-                    if(lastUpdated != null) {
-                        if(metadata == null) {
-                            /* Codes_SRS_TWIN_PROPERTY_21_032: [If there is no metadata, and the provided json contains $metadata, the update shall create a metadata instance.] */
-                            metadata = new HashMap<>();
-                        }
-                        metadata.put(item.getKey(), new TwinMetadata(lastUpdatedVersion, lastUpdated));
-                    }
+                Property val = property.get(entry.getKey());
+                if(val == null){
+                    diffField.put(entry.getKey(), null);
+                } else {
+                    diffField.put(entry.getKey(), val.value.toString());
                 }
-            }
-            else
-            {
-                Object oldVal = property.get(entry.getKey());
-                if((oldVal == null) || (!oldVal.equals(entry.getValue())))
-                {
-                    if(diff == null)
-                    {
-                        diff = new HashMap<>();
-                    }
-                    diff.put(entry.getKey(), entry.getValue().toString());
-                }
-                property.put(entry.getKey(), entry.getValue());
             }
         }
 
-        if((diff != null) &&(onCallback != null))
+        if((diffField.size() != 0) &&(onCallback != null))
         {
-            onCallback.execute(diff);
+            onCallback.execute(diffField);
         }
     }
 
-    public void update(String json, TwinPropertiesChangeCallback onCallback)
+    public void update(String json, TwinPropertiesChangeCallback onCallback) throws IllegalArgumentException
     {
         /* Codes_SRS_TWIN_PROPERTY_21_028: [The update shall fill the fields in TwinProperty with the values provided in the json string.] */
         /* Codes_SRS_TWIN_PROPERTY_21_029: [The update shall not change fields that is not reported in the json string.] */
         Type stringMap = new TypeToken<Map<String, String>>(){}.getType();
         LinkedTreeMap<String, Object> newValues = new LinkedTreeMap<String, Object>();
-        newValues = (LinkedTreeMap<String, Object>) gson.fromJson(json, newValues.getClass());
+        try {
+            newValues = (LinkedTreeMap<String, Object>) gson.fromJson(json, newValues.getClass());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Malformed Json:" + e);
+        }
         update(newValues, onCallback);
+    }
+
+    private void updateVersion(LinkedTreeMap<String, Object> jsonTree) {
+        for (Map.Entry<String, Object> entry : jsonTree.entrySet()) {
+            if (entry.getKey().equals(versionTag)) {
+                /* Codes_SRS_TWIN_PROPERTY_21_030: [If the provided json contains $version, the update shall update the version.] */
+                version = new Integer( (int) ((double) entry.getValue()));
+                break;
+            }
+        }
+    }
+
+    private HashMap<String, String>  updateMetadata(LinkedTreeMap<String, Object> jsonTree)
+    {
+        HashMap<String, String> diff = new HashMap<>();
+        for (Map.Entry<String, Object> entry : jsonTree.entrySet()) {
+            if(entry.getKey().equals(metadataTag))
+            {
+                /* Codes_SRS_TWIN_PROPERTY_21_031: [If the provided json contains $metadata, the update shall update the metadata for each provided key.] */
+                LinkedTreeMap<String, Object> metadataTree = (LinkedTreeMap<String, Object>)entry.getValue();
+                for (LinkedTreeMap.Entry<String, Object> item : metadataTree.entrySet()) {
+                    if(property.containsKey(item.getKey())) {
+                        LinkedTreeMap<String, Object> itemTree = (LinkedTreeMap<String, Object>) item.getValue();
+                        String lastUpdated = null;
+                        Integer lastUpdatedVersion = null;
+                        for (LinkedTreeMap.Entry<String, Object> metadataItem : itemTree.entrySet()) {
+                            if (metadataItem.getKey().equals(lastUpdateTag)) {
+                                lastUpdated = metadataItem.getValue().toString();
+                            } else if (metadataItem.getKey().equals(lastUpdateVersionTag)) {
+                                lastUpdatedVersion = (int) ((double) metadataItem.getValue());
+                            }
+                        }
+                        if(property.get(item.getKey()).metadata.update(lastUpdated, lastUpdatedVersion))
+                        {
+                            diff.put(item.getKey(), item.getValue().toString());
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        return diff;
+    }
+
+    private HashMap<String, String> updateFields(LinkedTreeMap<String, Object> jsonTree) throws IllegalArgumentException
+    {
+        HashMap<String, String> diff = new HashMap<>();
+
+        for (Map.Entry<String, Object> entry : jsonTree.entrySet()) {
+            if(entry.getKey().isEmpty())
+            {
+                throw new IllegalArgumentException("Invalid Key on Json");
+            }
+            if(!entry.getKey().contains("$"))
+            {
+                if(property.containsKey(entry.getKey()))
+                {
+                    if(entry.getValue() == null)
+                    {
+                        property.remove(entry.getKey());
+                        diff.put(entry.getKey(), null);
+                    }
+                    else if(!property.get(entry.getKey()).value.equals(entry.getValue()))
+                    {
+                        property.put(entry.getKey(), new Property(entry.getValue(), null));
+                        diff.put(entry.getKey(), entry.getValue().toString());
+                    }
+                }
+                else if(entry.getValue() != null)
+                {
+                    property.put(entry.getKey(), new Property(entry.getValue(), null));
+                    diff.put(entry.getKey(), entry.getValue().toString());
+                }
+            }
+        }
+
+        return diff;
     }
 
 }
