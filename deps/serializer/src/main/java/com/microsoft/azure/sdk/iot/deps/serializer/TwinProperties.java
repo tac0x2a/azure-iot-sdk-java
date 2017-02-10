@@ -18,16 +18,16 @@ import java.util.Map;
 public class TwinProperties
 {
     /* Codes_SRS_TWIN_PROPERTIES_21_001: [The Desired shall store an instance of the TwinProperty for the Twin `Desired` properties.] */
-    public TwinProperty Desired = new TwinProperty();
+    protected TwinProperty Desired = new TwinProperty();
 
     /* Codes_SRS_TWIN_PROPERTIES_21_002: [The Reported shall store an instance of the TwinProperty for the Twin `Reported` properties.]*/
-    public TwinProperty Reported = new TwinProperty();
+    protected TwinProperty Reported = new TwinProperty();
 
     public void enableDesiredMetadata() { Desired.enableMetadata(); }
     public void enableReportedMetadata() { Reported.enableMetadata(); }
 
-    public JsonElement updateDesired(HashMap<String, Object> property) { return Desired.update(property); }
-    public JsonElement updateReported(HashMap<String, Object> property) { return Reported.update(property); }
+    public JsonElement updateDesired(Map<String, Object> property) { return Desired.update(property); }
+    public JsonElement updateReported(Map<String, Object> property) { return Reported.update(property); }
 
     public void updateDesired(String json, TwinPropertiesChangeCallback onDesiredCallback) { Desired.update(json, onDesiredCallback); }
     public void updateReported(String json, TwinPropertiesChangeCallback onDesiredCallback) { Reported.update(json, onDesiredCallback); }

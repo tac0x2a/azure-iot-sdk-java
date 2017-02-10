@@ -23,12 +23,16 @@ public class Twin extends IoTHubDeviceProperties
     public void enableTags();
     public void enableMetadata();
 
+    public String toJson();
+    public JsonElement toJsonElement();
+
+
     public void updateTwin(String json);
     public void updateDesiredProperty(String json);
     public void updateReportedProperty(String json);
 
-    public String updateDesiredProperty(HashMap<String, String> property);
-    public String updateReportedProperty(HashMap<String, String> property);
+    public String updateDesiredProperty(Map<String, String> property);
+    public String updateReportedProperty(Map<String, String> property);
 
     public Integer getDesiredPropertyVersion();
     public Integer getReportedPropertyVersion();
@@ -83,7 +87,9 @@ public class Twin extends IoTHubDeviceProperties
 ```
 
 **SRS_TWIN_21_013: [**The setDesiredCallback shall set OnDesiredCallback with the provided Callback function.**]**  
-
+**SRS_TWIN_21_053: [**The setDesiredCallback shall keep only one instance of the callback.**]**  
+**SRS_TWIN_21_054: [**If the OnDesiredCallback is already set, the setDesiredCallback shall replace the first one.**]**  
+**SRS_TWIN_21_055: [**If callback is null, the setDesiredCallback will set the OnDesiredCallback as null.**]**  
 
 ### setReportedCallback
 
@@ -92,6 +98,9 @@ public class Twin extends IoTHubDeviceProperties
 ```
 
 **SRS_TWIN_21_014: [**The setReportedCallback shall set OnReportedCallback with the provided Callback function.**]**  
+**SRS_TWIN_21_056: [**The setReportedCallback shall keep only one instance of the callback.**]**  
+**SRS_TWIN_21_057: [**If the OnReportedCallback is already set, the setReportedCallback shall replace the first one.**]**  
+**SRS_TWIN_21_058: [**If callback is null, the setReportedCallback will set the OnReportedCallback as null.**]**  
 
 
 ### toJson
@@ -107,7 +116,7 @@ public class Twin extends IoTHubDeviceProperties
 ### toJsonElement
 
 ```java
-    public String toJsonElement()
+    public JsonElement toJsonElement()
 ```
 
 **SRS_TWIN_21_017: [**The toJsonElement shall return a JsonElement with information in the Twin using json format.**]**  
@@ -134,25 +143,31 @@ public class Twin extends IoTHubDeviceProperties
 ### updateDesiredProperty
 
 ```java
-    public String updateDesiredProperty(HashMap<String, Object> property)
+    public String updateDesiredProperty(Map<String, Object> property)
 ```
 
 **SRS_TWIN_21_021: [**The updateDesiredProperty shall add all provided properties to the Desired property.**]**  
 **SRS_TWIN_21_022: [**The updateDesiredProperty shall return a string with json representing the desired properties with changes.**]**  
-**SRS_TWIN_21_023: [**If the provided `property` map is null, the updateDesiredProperty shall return null.**]**  
+**SRS_TWIN_21_023: [**If the provided `property` map is null, the updateDesiredProperty shall not change the database and return null.**]**  
 **SRS_TWIN_21_024: [**If no Desired property changed its value, the updateDesiredProperty shall return null.**]**  
+**SRS_TWIN_21_059: [**The updateDesiredProperty shall only change properties in the map, keep the others as is.**]**  
+**SRS_TWIN_21_061: [**The key and value in property shall be case sensitive.**]**  
+**SRS_TWIN_21_063: [**If the provided `property` map is empty, the updateDesiredProperty shall not change the database and return null.**]**  
 
 
 ### updateReportedProperty
 
 ```java
-    public String updateReportedProperty(HashMap<String, Object> property)
+    public String updateReportedProperty(Map<String, Object> property)
 ```
 
 **SRS_TWIN_21_025: [**The updateReportedProperty shall add all provided properties to the Reported property.**]**  
 **SRS_TWIN_21_026: [**The updateReportedProperty shall return a string with json representing the Reported properties with changes.**]**  
-**SRS_TWIN_21_027: [**If the provided `property` map is null, the updateReportedProperty shall return null.**]**  
+**SRS_TWIN_21_027: [**If the provided `property` map is null, the updateReportedProperty shall not change the database and return null.**]**  
 **SRS_TWIN_21_028: [**If no Reported property changed its value, the updateReportedProperty shall return null.**]**  
+**SRS_TWIN_21_060: [**The updateReportedProperty shall only change properties in the map, keep the others as is.**]**  
+**SRS_TWIN_21_062: [**The key and value in property shall be case sensitive.**]**  
+**SRS_TWIN_21_064: [**If the provided `property` map is empty, the updateReportedProperty shall not change the database and return null.**]**  
 
 
 ### updateDesiredProperty
@@ -165,7 +180,9 @@ public class Twin extends IoTHubDeviceProperties
 **SRS_TWIN_21_030: [**The updateDesiredProperty shall generate a map with all pairs key value that had its content changed.**]**  
 **SRS_TWIN_21_031: [**The updateDesiredProperty shall send the map with all changed pairs to the upper layer calling onDesiredCallback (TwinPropertiesChangeCallback).**]**  
 **SRS_TWIN_21_032: [**If the OnDesiredCallback is set as null, the updateDesiredProperty shall discard the map with the changed pairs.**]**  
-**SRS_TWIN_21_033: [**If there is no change in the Desired property, the updateDesiredProperty shall not call the OnDesiredCallback.**]**  
+**SRS_TWIN_21_033: [**If there is no change in the Desired property, the updateDesiredProperty shall not change the database and not call the OnDesiredCallback.**]**  
+**SRS_TWIN_21_065: [**If the provided json is empty, the updateDesiredProperty shall not change the database and not call the OnDesiredCallback.**]**  
+**SRS_TWIN_21_066: [**If the provided json is null, the updateDesiredProperty shall not change the database and not call the OnDesiredCallback.**]**  
 
 
 ### updateReportedProperty
@@ -178,7 +195,9 @@ public class Twin extends IoTHubDeviceProperties
 **SRS_TWIN_21_035: [**The updateReportedProperty shall generate a map with all pairs key value that had its content changed.**]**  
 **SRS_TWIN_21_036: [**The updateReportedProperty shall send the map with all changed pairs to the upper layer calling onReportedCallback (TwinPropertiesChangeCallback).**]**  
 **SRS_TWIN_21_037: [**If the OnReportedCallback is set as null, the updateReportedProperty shall discard the map with the changed pairs.**]**  
-**SRS_TWIN_21_038: [**If there is no change in the Reported property, the updateReportedProperty shall not call the OnReportedCallback.**]**  
+**SRS_TWIN_21_038: [**If there is no change in the Reported property, the updateReportedProperty shall not change the database and not call the OnReportedCallback.**]**  
+**SRS_TWIN_21_067: [**If the provided json is empty, the updateReportedProperty shall not change the database and not call the OnReportedCallback.**]**  
+**SRS_TWIN_21_068: [**If the provided json is null, the updateReportedProperty shall not change the database and not call the OnReportedCallback.**]**  
 
 
 ### updateTwin
@@ -196,6 +215,10 @@ public class Twin extends IoTHubDeviceProperties
 **SRS_TWIN_21_045: [**If OnReportedCallback was provided, the updateTwin shall create a new map with a copy of all pars key values updated by the json in the Reported property, and OnReportedCallback passing this map as parameter.**]**  
 **SRS_TWIN_21_046: [**If OnDesiredCallback was not provided, the updateTwin shall not do anything with the list of updated desired properties.**]**  
 **SRS_TWIN_21_047: [**If OnReportedCallback was not provided, the updateTwin shall not do anything with the list of updated reported properties.**]**  
+**SRS_TWIN_21_069: [**If there is no change in the Desired property, the updateTwin shall not change the reported database and not call the OnReportedCallback.**]**  
+**SRS_TWIN_21_070: [**If there is no change in the Reported property, the updateTwin shall not change the reported database and not call the OnReportedCallback.**]**  
+**SRS_TWIN_21_071: [**If the provided json is empty, the updateTwin shall not change the database and not call the OnDesiredCallback or the OnReportedCallback.**]**  
+**SRS_TWIN_21_072: [**If the provided json is null, the updateTwin shall not change the database and not call the OnDesiredCallback or the OnReportedCallback.**]**  
 
 
 ### getDesiredPropertyVersion

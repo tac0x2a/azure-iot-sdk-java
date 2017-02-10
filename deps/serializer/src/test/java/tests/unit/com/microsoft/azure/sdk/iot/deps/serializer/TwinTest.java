@@ -231,7 +231,7 @@ public class TwinTest {
         assertThat(resultJson.get("key3").toString(), is("value3"));
 
         TwinProperties properties = Deencapsulation.getField(twin, "properties");
-        TwinProperty originJson = properties.Desired;
+        TwinProperty originJson = Deencapsulation.getField(properties, "Desired");
         assertThat(resultJson.GetMetadata("key1").GetLastUpdateVersion(), is(originJson.GetMetadata("key1").GetLastUpdateVersion()));
         assertThat(resultJson.GetMetadata("key2").GetLastUpdateVersion(), is(originJson.GetMetadata("key2").GetLastUpdateVersion()));
         assertThat(resultJson.GetMetadata("key3").GetLastUpdateVersion(), is(originJson.GetMetadata("key3").GetLastUpdateVersion()));
@@ -274,7 +274,7 @@ public class TwinTest {
         assertThat(resultJson.get("key3").toString(), is("value3"));
 
         TwinProperties properties = Deencapsulation.getField(twin, "properties");
-        TwinProperty originJson = properties.Desired;
+        TwinProperty originJson = Deencapsulation.getField(properties, "Desired");
         assertThat(resultJson.GetMetadata("key1").GetLastUpdateVersion(), is(originJson.GetMetadata("key1").GetLastUpdateVersion()));
         assertThat(resultJson.GetMetadata("key2").GetLastUpdateVersion(), is(originJson.GetMetadata("key2").GetLastUpdateVersion()));
         assertThat(resultJson.GetMetadata("key3").GetLastUpdateVersion(), is(originJson.GetMetadata("key3").GetLastUpdateVersion()));
@@ -320,6 +320,7 @@ public class TwinTest {
     }
 
     /* Codes_SRS_TWIN_21_022: [The updateDesiredProperty shall return a string with json representing the desired properties with changes.] */
+    /* Codes_SRS_TWIN_21_059: [The updateDesiredProperty shall only change properties in the map, keep the others as is.] */
     @Test
     public void updateDesiredProperty_newValue_succeed()
     {
@@ -342,6 +343,63 @@ public class TwinTest {
         HashMap<String, String> result = twin.getDesiredPropertyMap();
         assertThat(result.size(), is(3));
         assertThat(result.get("key1"), is("value4"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
+    }
+
+    /* Codes_SRS_TWIN_21_061: [The key and value in property shall be case sensitive.] */
+    @Test
+    public void updateDesiredProperty_caseSensitive_succeed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234);
+        newValues.put("key3", "value3");
+        twin.updateDesiredProperty(newValues);
+
+        newValues.clear();
+        newValues.put("key1", "value4");
+        newValues.put("kEy1", "value1");
+
+        // Act
+        String json = twin.updateDesiredProperty(newValues);
+
+        // Assert
+        assertThat(json, is("{\"key1\":\"value4\",\"kEy1\":\"value1\"}"));
+        HashMap<String, String> result = twin.getDesiredPropertyMap();
+        assertThat(result.size(), is(4));
+        assertThat(result.get("key1"), is("value4"));
+        assertThat(result.get("kEy1"), is("value1"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
+    }
+
+    /* Codes_SRS_TWIN_21_063: [If the provided `property` map is empty, the updateDesiredProperty shall not change the database and return null.] */
+    @Test
+    public void updateDesiredProperty_emptyMap_succeed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234);
+        newValues.put("key3", "value3");
+        twin.updateDesiredProperty(newValues);
+
+        newValues.clear();
+
+        // Act
+        String json = twin.updateDesiredProperty(newValues);
+
+        // Assert
+        assertNull(json);
+        HashMap<String, String> result = twin.getDesiredPropertyMap();
+        assertThat(result.size(), is(3));
+        assertThat(result.get("key1"), is("value1"));
         double keydb = Double.parseDouble(result.get("key2"));
         assertThat(keydb, is(1234.0));
         assertThat(result.get("key3"), is("value3"));
@@ -412,7 +470,7 @@ public class TwinTest {
         assertThat(result.get("key7"), is("true"));
     }
 
-    /* Codes_SRS_TWIN_21_023: [If the provided `property` map is null, the updateDesiredProperty shall return null.] */
+    /* Codes_SRS_TWIN_21_023: [If the provided `property` map is null, the updateDesiredProperty shall not change the database and return null.] */
     /* Codes_SRS_TWIN_21_024: [If no Desired property changed its value, the updateDesiredProperty shall return null.] */
     @Test
     public void updateDesiredProperty_emptyMap_failed()
@@ -481,6 +539,7 @@ public class TwinTest {
     }
 
     /* Codes_SRS_TWIN_21_026: [The updateReportedProperty shall return a string with json representing the Reported properties with changes.] */
+    /* Codes_SRS_TWIN_21_060: [The updateReportedProperty shall only change properties in the map, keep the others as is.] */
     @Test
     public void updateReportedProperty_newAndOld_succeed()
     {
@@ -510,6 +569,63 @@ public class TwinTest {
         assertThat(keydb, is(1234.0));
         assertThat(result.get("key3"), is("value3"));
         assertThat(result.get("key5"), is("value5"));
+    }
+
+    /* Codes_SRS_TWIN_21_062: [The key and value in property shall be case sensitive.] */
+    @Test
+    public void updateReportedProperty_caseSensitive_succeed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234);
+        newValues.put("key3", "value3");
+        twin.updateReportedProperty(newValues);
+
+        newValues.clear();
+        newValues.put("key1", "value4");
+        newValues.put("kEy1", "value1");
+
+        // Act
+        String json = twin.updateReportedProperty(newValues);
+
+        // Assert
+        assertThat(json, is("{\"key1\":\"value4\",\"kEy1\":\"value1\"}"));
+        HashMap<String, String> result = twin.getReportedPropertyMap();
+        assertThat(result.size(), is(4));
+        assertThat(result.get("key1"), is("value4"));
+        assertThat(result.get("kEy1"), is("value1"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
+    }
+
+    /* Codes_SRS_TWIN_21_064: [If the provided `property` map is empty, the updateReportedProperty shall not change the database and return null.] */
+    @Test
+    public void updateReportedProperty_emptyMap_succeed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234);
+        newValues.put("key3", "value3");
+        twin.updateReportedProperty(newValues);
+
+        newValues.clear();
+
+        // Act
+        String json = twin.updateReportedProperty(newValues);
+
+        // Assert
+        assertNull(json);
+        HashMap<String, String> result = twin.getReportedPropertyMap();
+        assertThat(result.size(), is(3));
+        assertThat(result.get("key1"), is("value1"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
     }
 
     /* Codes_SRS_TWIN_21_026: [The updateReportedProperty shall return a string with json representing the Reported properties with changes.] */
@@ -547,7 +663,7 @@ public class TwinTest {
         assertThat(result.get("key5"), is("value5"));
     }
 
-    /* Codes_SRS_TWIN_21_027: [If the provided `property` map is null, the updateReportedProperty shall return null.] */
+    /* Codes_SRS_TWIN_21_027: [If the provided `property` map is null, the updateReportedProperty shall not change the database and return null.] */
     /* Codes_SRS_TWIN_21_028: [If no Reported property changed its value, the updateReportedProperty shall return null.] */
     @Test
     public void updateReportedProperty_emptyMap_failed()
@@ -658,7 +774,7 @@ public class TwinTest {
         assertThat(result.get("key3"), is("value3"));
     }
 
-    /* Codes_SRS_TWIN_21_038: [If there is no change in the Reported property, the updateReportedProperty shall not call the OnReportedCallback.] */
+    /* Codes_SRS_TWIN_21_038: [If there is no change in the Reported property, the updateReportedProperty shall not change the database and not call the OnReportedCallback.] */
     @Test
     public void updateReportedProperty_json_noChanges_succeed()
     {
@@ -673,6 +789,66 @@ public class TwinTest {
         twin.updateReportedProperty(newValues);
 
         String json = "{\"key1\":\"value1\",\"key2\":1234.0,\"key3\":\"value3\"}";
+
+        // Act
+        twin.updateReportedProperty(json);
+
+        // Assert
+        assertNull(onReportedCallback.diff);
+
+        HashMap<String, String> result = twin.getReportedPropertyMap();
+        assertThat(result.size(), is(3));
+        assertThat(result.get("key1"), is("value1"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
+    }
+
+    /* Codes_SRS_TWIN_21_067: [If the provided json is empty, the updateReportedProperty shall not change the database and not call the OnReportedCallback.] */
+    @Test
+    public void updateReportedProperty_json_empty_succeed()
+    {
+        // Arrange
+        OnReportedCallback onReportedCallback = new OnReportedCallback();
+        Twin twin = new Twin();
+        twin.setReportedCallback(onReportedCallback);
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234.0);
+        newValues.put("key3", "value3");
+        twin.updateReportedProperty(newValues);
+
+        String json = "";
+
+        // Act
+        twin.updateReportedProperty(json);
+
+        // Assert
+        assertNull(onReportedCallback.diff);
+
+        HashMap<String, String> result = twin.getReportedPropertyMap();
+        assertThat(result.size(), is(3));
+        assertThat(result.get("key1"), is("value1"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
+    }
+
+    /* Codes_SRS_TWIN_21_068: [If the provided json is null, the updateReportedProperty shall not change the database and not call the OnReportedCallback.] */
+    @Test
+    public void updateReportedProperty_json_null_succeed()
+    {
+        // Arrange
+        OnReportedCallback onReportedCallback = new OnReportedCallback();
+        Twin twin = new Twin();
+        twin.setReportedCallback(onReportedCallback);
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234.0);
+        newValues.put("key3", "value3");
+        twin.updateReportedProperty(newValues);
+
+        String json = null;
 
         // Act
         twin.updateReportedProperty(json);
@@ -787,7 +963,7 @@ public class TwinTest {
         assertThat(result.get("key3"), is("value3"));
     }
 
-    /* Codes_SRS_TWIN_21_033: [If there is no change in the Desired property, the updateDesiredProperty shall not call the OnDesiredCallback.] */
+    /* Codes_SRS_TWIN_21_033: [If there is no change in the Desired property, the updateDesiredProperty shall not change the database and not call the OnDesiredCallback.] */
     @Test
     public void updateDesiredProperty_json_noChanges_succeed()
     {
@@ -816,6 +992,67 @@ public class TwinTest {
         assertThat(keydb, is(1234.0));
         assertThat(result.get("key3"), is("value3"));
     }
+
+    /* Codes_SRS_TWIN_21_065: [If the provided json is empty, the updateDesiredProperty shall not change the database and not call the OnDesiredCallback.] */
+    @Test
+    public void updateDesiredProperty_json_empty_succeed()
+    {
+        // Arrange
+        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
+        Twin twin = new Twin();
+        twin.setDesiredCallback(onDesiredCallback);
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234.0);
+        newValues.put("key3", "value3");
+        twin.updateDesiredProperty(newValues);
+
+        String json = "";
+
+        // Act
+        twin.updateDesiredProperty(json);
+
+        // Assert
+        assertNull(onDesiredCallback.diff);
+
+        HashMap<String, String> result = twin.getDesiredPropertyMap();
+        assertThat(result.size(), is(3));
+        assertThat(result.get("key1"), is("value1"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
+    }
+
+    /* Codes_SRS_TWIN_21_066: [If the provided json is null, the updateDesiredProperty shall not change the database and not call the OnDesiredCallback.] */
+    @Test
+    public void updateDesiredProperty_json_null_succeed()
+    {
+        // Arrange
+        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
+        Twin twin = new Twin();
+        twin.setDesiredCallback(onDesiredCallback);
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234.0);
+        newValues.put("key3", "value3");
+        twin.updateDesiredProperty(newValues);
+
+        String json = null;
+
+        // Act
+        twin.updateDesiredProperty(json);
+
+        // Assert
+        assertNull(onDesiredCallback.diff);
+
+        HashMap<String, String> result = twin.getDesiredPropertyMap();
+        assertThat(result.size(), is(3));
+        assertThat(result.get("key1"), is("value1"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
+    }
+
 
     /* Codes_SRS_TWIN_21_009: [The constructor shall call the standard constructor.] */
     /* Codes_SRS_TWIN_21_012: [The constructor shall set Tags as null.] */
@@ -885,6 +1122,90 @@ public class TwinTest {
         String resultJson = twin.toJson();
         assertThat(resultJson, is(json));
     }
+
+    /* Codes_SRS_TWIN_21_069: [If there is no change in the Desired property, the updateTwin shall not change the reported database and not call the OnReportedCallback.] */
+    @Test
+    public void updateTwin_json_emptyClass_noChangeOnDesired_succeed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "{\"properties\":{\"desired\":{},\"reported\":{\"key1\":\"value1\",\"key2\":1234.124,\"key5\":\"value5\",\"key7\":true}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        String resultJson = twin.toJson();
+        assertThat(resultJson, is(json));
+    }
+
+    /* Codes_SRS_TWIN_21_069: [If there is no change in the Desired property, the updateTwin shall not change the reported database and not call the OnReportedCallback.] */
+    @Test
+    public void updateTwin_json_emptyClass_noDesired_succeed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "{\"properties\":{\"reported\":{\"key1\":\"value1\",\"key2\":1234.124,\"key5\":\"value5\",\"key7\":true}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        String resultJson = twin.toJson();
+        assertThat(resultJson, is("{\"properties\":{\"desired\":{},\"reported\":{\"key1\":\"value1\",\"key2\":1234.124,\"key5\":\"value5\",\"key7\":true}}}"));
+    }
+
+    /* Codes_SRS_TWIN_21_070: [If there is no change in the Reported property, the updateTwin shall not change the reported database and not call the OnReportedCallback.] */
+    @Test
+    public void updateTwin_json_emptyClass_noChangeOnReported_succeed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "{\"properties\":{\"desired\":{\"key1\":\"value1\",\"key2\":1234.0,\"key3\":\"value3\"},\"reported\":{}}}";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        String resultJson = twin.toJson();
+        assertThat(resultJson, is(json));
+    }
+
+    /* Codes_SRS_TWIN_21_071: [If the provided json is empty, the updateTwin shall not change the database and not call the OnDesiredCallback or the OnReportedCallback.] */
+    @Test
+    public void updateTwin_json_empty_succeed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+
+        String json = "";
+
+        // Act
+        twin.updateTwin(json);
+
+        // Assert
+        assertNull(twin.getDesiredPropertyMap());
+        assertNull(twin.getReportedPropertyMap());
+    }
+
+    /* Codes_SRS_TWIN_21_072: [If the provided json is null, the updateTwin shall not change the database and not call the OnDesiredCallback or the OnReportedCallback.] */
+    @Test
+    public void updateTwin_json_null_succeed()
+    {
+        // Arrange
+        Twin twin = new Twin();
+        
+        // Act
+        twin.updateTwin(null);
+
+        // Assert
+        assertNull(twin.getDesiredPropertyMap());
+        assertNull(twin.getReportedPropertyMap());
+    }
+
 
     /* Codes_SRS_TWIN_21_039: [The updateTwin shall fill the fields the properties in the Twin class with the keys and values provided in the json string.] */
     /* Codes_SRS_TWIN_21_041: [The updateTwin shall create a list with all properties that was updated (new key or value) by the new json.] */
@@ -1337,5 +1658,117 @@ public class TwinTest {
 
         // Assert
     }
+
+    /* Codes_SRS_TWIN_21_053: [The setDesiredCallback shall keep only one instance of the callback.] */
+    /* Codes_SRS_TWIN_21_054: [If the OnDesiredCallback is already set, the setDesiredCallback shall replace the first one.] */
+    /* Codes_SRS_TWIN_21_056: [The setReportedCallback shall keep only one instance of the callback.] */
+    /* Codes_SRS_TWIN_21_057: [If the OnReportedCallback is already set, the setReportedCallback shall replace the first one.] */
+    @Test
+    public void updateTwin_json_change_callback_succeed()
+    {
+        // Arrange
+        OnDesiredCallback onDesiredCallback1 = new OnDesiredCallback();
+        OnReportedCallback onReportedCallback1 = new OnReportedCallback();
+        OnDesiredCallback onDesiredCallback2 = new OnDesiredCallback();
+        OnReportedCallback onReportedCallback2 = new OnReportedCallback();
+        Twin twin = new Twin(onDesiredCallback1, onReportedCallback1);
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234);
+        newValues.put("key3", "value3");
+        twin.updateDesiredProperty(newValues);
+        newValues.clear();
+        newValues.put("key1", "value4");
+        newValues.put("key2", 1234);
+        newValues.put("key6", "value6");
+        newValues.put("key7", true);
+        twin.updateReportedProperty(newValues);
+
+        String json = "{\"properties\":{" +
+                "\"desired\":{\"key3\":null,\"key1\":\"value4\"}," +
+                "\"reported\":{\"key1\":null,\"key5\":null,\"key7\":null}}}";
+
+        // Act
+        twin.setDesiredCallback(onDesiredCallback2);
+        twin.setReportedCallback(onReportedCallback2);
+
+        // Assert
+        twin.updateTwin(json);
+
+        assertNull(onDesiredCallback1.diff);
+        assertNull(onReportedCallback1.diff);
+
+        assertThat(onDesiredCallback2.diff.size(), is(2));
+        assertNull(onDesiredCallback2.diff.get("key3"));
+        assertThat(onDesiredCallback2.diff.get("key1"), is("value4"));
+
+        assertThat(onReportedCallback2.diff.size(), is(2));
+        assertNull(onReportedCallback2.diff.get("key1"));
+        assertNull(onReportedCallback2.diff.get("key7"));
+
+        HashMap<String, String> result = twin.getDesiredPropertyMap();
+        assertThat(result.size(), is(2));
+        assertThat(result.get("key1"), is("value4"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+
+        result = twin.getReportedPropertyMap();
+        assertThat(result.size(), is(2));
+        keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key6"), is("value6"));
+    }
+
+    /* Codes_SRS_TWIN_21_055: [If callback is null, the setDesiredCallback will set the OnDesiredCallback as null.] */
+    /* Codes_SRS_TWIN_21_058: [If callback is null, the setReportedCallback will set the OnReportedCallback as null.] */
+    @Test
+    public void updateTwin_json_cleanCallback_succeed()
+    {
+        // Arrange
+        OnDesiredCallback onDesiredCallback = new OnDesiredCallback();
+        OnReportedCallback onReportedCallback = new OnReportedCallback();
+        Twin twin = new Twin(onDesiredCallback, onReportedCallback);
+        HashMap<String, Object> newValues = new HashMap<>();
+        newValues.put("key1", "value1");
+        newValues.put("key2", 1234);
+        newValues.put("key3", "value3");
+        twin.updateReportedProperty(newValues);
+        newValues.clear();
+        newValues.put("key1", "value4");
+        newValues.put("key2", 1234);
+        newValues.put("key6", "value6");
+        newValues.put("key7", true);
+        twin.updateDesiredProperty(newValues);
+
+        String json = "{\"properties\":{" +
+                "\"desired\":{\"key2\":9875}," +
+                "\"reported\":{\"key1\":\"value4\"}}}";
+
+        // Act
+        twin.setDesiredCallback(null);
+        twin.setReportedCallback(null);
+
+        // Assert
+        twin.updateTwin(json);
+
+        assertNull(onDesiredCallback.diff);
+        assertNull(onReportedCallback.diff);
+
+        HashMap<String, String> result = twin.getDesiredPropertyMap();
+        assertThat(result.size(), is(4));
+        assertThat(result.get("key1"), is("value4"));
+        double keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(9875.0));
+        assertThat(result.get("key6"), is("value6"));
+        assertThat(result.get("key7"), is("true"));
+
+        result = twin.getReportedPropertyMap();
+        assertThat(result.size(), is(3));
+        assertThat(result.get("key1"), is("value4"));
+        keydb = Double.parseDouble(result.get("key2"));
+        assertThat(keydb, is(1234.0));
+        assertThat(result.get("key3"), is("value3"));
+    }
+
 
 }

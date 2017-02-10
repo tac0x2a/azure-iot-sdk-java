@@ -111,7 +111,7 @@ public class TwinProperty {
         return change;
     }
 
-    public JsonElement update(HashMap<String, Object> property)
+    public JsonElement update(Map<String, Object> property)
     {
         JsonElement updatedJsonElement;
         TwinProperty updated = new TwinProperty();
