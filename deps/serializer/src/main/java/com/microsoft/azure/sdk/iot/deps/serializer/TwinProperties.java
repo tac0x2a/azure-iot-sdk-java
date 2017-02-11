@@ -11,51 +11,62 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * INNER TWIN CLASS
+ *
  * Twin Properties representation
  *
  * This class is part of the Twin. It is necessary to generate the properties json.
  */
 public class TwinProperties
 {
-    /* Codes_SRS_TWIN_PROPERTIES_21_001: [The Desired shall store an instance of the TwinProperty for the Twin `Desired` properties.] */
-    protected TwinProperty Desired = new TwinProperty();
+    private TwinProperty Desired = new TwinProperty();
+    private TwinProperty Reported = new TwinProperty();
 
-    /* Codes_SRS_TWIN_PROPERTIES_21_002: [The Reported shall store an instance of the TwinProperty for the Twin `Reported` properties.]*/
-    protected TwinProperty Reported = new TwinProperty();
+    protected void enableDesiredMetadata() { Desired.enableMetadata(); }
+    protected void enableReportedMetadata() { Reported.enableMetadata(); }
 
-    public void enableDesiredMetadata() { Desired.enableMetadata(); }
-    public void enableReportedMetadata() { Reported.enableMetadata(); }
+    protected JsonElement updateDesired(Map<String, Object> property)
+    {
+        /* Codes_SRS_TWIN_21_021: [The updateDesiredProperty shall add all provided properties to the Desired property.] */
+        return Desired.update(property);
+    }
+    protected JsonElement updateReported(Map<String, Object> property)
+    {
+        /* Codes_SRS_TWIN_21_025: [The updateReportedProperty shall add all provided properties to the Reported property.] */
+        return Reported.update(property);
+    }
 
-    public JsonElement updateDesired(Map<String, Object> property) { return Desired.update(property); }
-    public JsonElement updateReported(Map<String, Object> property) { return Reported.update(property); }
+    protected void updateDesired(String json, TwinPropertiesChangeCallback onDesiredCallback) { Desired.update(json, onDesiredCallback); }
+    protected void updateReported(String json, TwinPropertiesChangeCallback onDesiredCallback) { Reported.update(json, onDesiredCallback); }
 
-    public void updateDesired(String json, TwinPropertiesChangeCallback onDesiredCallback) { Desired.update(json, onDesiredCallback); }
-    public void updateReported(String json, TwinPropertiesChangeCallback onDesiredCallback) { Reported.update(json, onDesiredCallback); }
+    protected Integer getDesiredVersion() { return Desired.GetVersion(); }
+    protected Integer getReportedVersion() { return Reported.GetVersion(); }
 
-    public Integer getDesiredVersion() { return Desired.GetVersion(); }
-    public Integer getReportedVersion() { return Reported.GetVersion(); }
+    protected Map<String, String> getDesiredPropertyMap() { return Desired.GetPropertyMap(); }
+    protected Map<String, String> getReportedPropertyMap() { return Reported.GetPropertyMap(); }
 
-    public HashMap<String, String> getDesiredPropertyMap() { return Desired.GetPropertyMap(); }
-    public HashMap<String, String> getReportedPropertyMap() { return Reported.GetPropertyMap(); }
-
-    public String toJson()
+    protected String toJson()
     {
         return toJsonElement().toString();
     }
 
-    public JsonElement toJsonElement()
+    protected JsonElement toJsonElement()
     {
-        JsonElement desired = Desired.toJsonElement();
-        JsonElement reported = Reported.toJsonElement();
-
+        /* Codes_SRS_TWIN_21_017: [The toJsonElement shall return a JsonElement with information in the Twin using json format.] */
         JsonObject propertiesJson = new JsonObject();
+
+        /* Codes_SRS_TWIN_21_087: [**The toJsonElement shall include the `desired` property in the json even if it has no content.] */
+        JsonElement desired = Desired.toJsonElement();
         propertiesJson.add("desired", desired);
+
+        /* Codes_SRS_TWIN_21_088: [**The toJsonElement shall include the `reported` property in the json even if it has no content.] */
+        JsonElement reported = Reported.toJsonElement();
         propertiesJson.add("reported", reported);
 
         return (JsonElement) propertiesJson;
     }
 
-    public void update(LinkedTreeMap<String, Object> jsonTree,
+    protected void update(Map<String, Object> jsonTree,
                        TwinPropertiesChangeCallback onDesiredCallback, TwinPropertiesChangeCallback onReportedCallback)
             throws IllegalArgumentException
     {

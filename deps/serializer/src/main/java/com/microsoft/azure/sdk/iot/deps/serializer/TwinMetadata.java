@@ -12,39 +12,41 @@ import java.util.Date;
 import java.util.TimeZone;
 
 /**
+ * INNER TWIN CLASS
+ *
  * Twin metadata representation
+ *
  */
 public class TwinMetadata {
 
-    private static final Gson gson = new GsonBuilder().create();
     private static final String DATEFORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSS'Z'";
     private static final String TIMEZONE = "UTC";
 
     @SerializedName("$lastUpdated")
-    protected String lastUpdated;
+    private String lastUpdated;
 
     @SerializedName("$lastUpdatedVersion")
-    protected Integer lastUpdatedVersion;
+    private Integer lastUpdatedVersion;
 
-    public TwinMetadata()
+    protected TwinMetadata()
     {
         update();
         lastUpdatedVersion = null;
     }
 
-    public TwinMetadata(Integer version)
+    protected TwinMetadata(Integer version)
     {
         update();
         lastUpdatedVersion = version;
     }
 
-    public TwinMetadata(Integer version, String dateTime)
+    protected TwinMetadata(Integer version, String dateTime)
     {
         lastUpdated = dateTime;
         lastUpdatedVersion = version;
     }
 
-    public boolean update(String dateTime, Integer version)
+    protected boolean update(String dateTime, Integer version)
     {
         boolean updated;
 
@@ -68,19 +70,19 @@ public class TwinMetadata {
         return updated;
     }
 
-    public void update(int version)
+    protected void update(int version)
     {
         update();
         lastUpdatedVersion = version;
     }
 
-    public void update()
+    protected void update()
     {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DATEFORMAT);
         dateFormat.setTimeZone(TimeZone.getTimeZone(TIMEZONE));
         lastUpdated = dateFormat.format(new Date());
     }
 
-    public Integer GetLastUpdateVersion() { return lastUpdatedVersion; }
-    public String GetLastUpdate() { return lastUpdated; }
+    protected Integer GetLastUpdateVersion() { return lastUpdatedVersion; }
+    protected String GetLastUpdate() { return lastUpdated; }
 }

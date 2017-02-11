@@ -3,13 +3,15 @@
 
 package com.microsoft.azure.sdk.iot.deps.serializer;
 
-import java.util.HashMap;
+import java.util.Map;
 
 /**
+ * INNER TWIN CLASS
+ *
  * An interface for an IoT Hub Device Twin callback.
  *
  * Developers are expected to create an implementation of this interface,
- * and the transport will call {@link TwinPropertiesChangeCallback#execute(HashMap<String , String>)}
+ * and the transport will call {@link TwinPropertiesChangeCallback#execute(Map<String , String>)}
  * upon receiving a property changes from an IoT Hub Device Twin.
  */
 public interface TwinPropertiesChangeCallback {
@@ -18,5 +20,5 @@ public interface TwinPropertiesChangeCallback {
      *
      * @param propertyMap is a collection of properties that had its values changed.
      */
-    void execute(HashMap<String , String> propertyMap);
+    void execute(Map<String , String> propertyMap);
 }
