@@ -376,7 +376,7 @@ public final class AmqpsIotHubConnection extends BaseHandler
                 // If proton failed sending, release dlv object. Otherwise release it when received a disposition frame from proton.
                 sender.advance();
                 dlv.free();
-                throw e;
+                deliveryHash = -1;
             }
         }
 
